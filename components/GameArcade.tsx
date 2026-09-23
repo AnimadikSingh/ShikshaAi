@@ -1,430 +1,975 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Trophy, Play, RefreshCw, Zap, Brain, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Pause, Grid, ArrowLeft, Gamepad2, Timer, CheckCircle2 } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  Trophy, Play, RefreshCw, Zap, Brain, ArrowLeft, Gamepad2, Timer, 
+  CheckCircle2, Star, Sparkles, Scale, Lightbulb, Compass, Award, 
+  RotateCw, ChevronRight, Volume2, VolumeX, ShieldAlert, Flame,
+  Sliders, Eye, ShieldCheck, Target, Layers, ArrowUpRight
+} from 'lucide-react';
 import { useStudent } from '../context/StudentContext';
+import { sounds } from '../services/audioService';
 
-// --- SHARED TYPES & DATA ---
-type GameView = 'MENU' | 'SNAKE' | 'MEMORY';
+type ArcadeView = 'HUB' | 'BALANCE_BEAM' | 'CIRCUIT_MASTER' | 'ELEMENT_RUSH' | 'OPTICS_MAZE';
 
-// --- GAME 1: BIO-SNAKE LOGIC ---
-const KNOWLEDGE_BITES = [
-  { type: 'Formula', text: 'Ohm\'s Law: V = IR' },
-  { type: 'Fact', text: 'Mitochondria is the powerhouse of the cell.' },
-  { type: 'Formula', text: 'Mirror Formula: 1/v + 1/u = 1/f' },
-  { type: 'Fact', text: 'Acids turn Blue litmus Red.' },
-  { type: 'Formula', text: 'Power: P = VI' },
-  { type: 'Fact', text: 'Xylem transports water, Phloem transports food.' },
-  { type: 'Formula', text: 'Lens Power: P = 1/f (in meters)' },
-  { type: 'Fact', text: 'Sodium is kept in Kerosene to prevent reaction.' },
-  { type: 'Formula', text: 'Glucose: C6H12O6' },
-  { type: 'Fact', text: 'The pH of pure water is 7 (Neutral).' },
-  { type: 'Formula', text: 'Limestone: CaCO3' },
-  { type: 'Fact', text: 'Convex mirrors always form virtual, diminished images.' }
+// =========================================================================
+// GAME 1: REACTION BALANCE BEAM (Chemical Stoichiometric Scale)
+// =========================================================================
+interface EquationLevel {
+  id: number;
+  title: string;
+  reactants: { formula: string; atoms: { symbol: string; count: number }[]; targetCoeff: number }[];
+  products: { formula: string; atoms: { symbol: string; count: number }[]; targetCoeff: number }[];
+  explanation: string;
+}
+
+const BALANCE_LEVELS: EquationLevel[] = [
+  {
+    id: 1,
+    title: 'Formation of Water',
+    reactants: [
+      { formula: 'H₂', atoms: [{ symbol: 'H', count: 2 }], targetCoeff: 2 },
+      { formula: 'O₂', atoms: [{ symbol: 'O', count: 2 }], targetCoeff: 1 }
+    ],
+    products: [
+      { formula: 'H₂O', atoms: [{ symbol: 'H', count: 2 }, { symbol: 'O', count: 1 }], targetCoeff: 2 }
+    ],
+    explanation: '2H₂ + O₂ ➔ 2H₂O: 4 Hydrogen atoms and 2 Oxygen atoms on both sides (Law of Conservation of Mass).'
+  },
+  {
+    id: 2,
+    title: 'Synthesis of Ammonia',
+    reactants: [
+      { formula: 'N₂', atoms: [{ symbol: 'N', count: 2 }], targetCoeff: 1 },
+      { formula: 'H₂', atoms: [{ symbol: 'H', count: 2 }], targetCoeff: 3 }
+    ],
+    products: [
+      { formula: 'NH₃', atoms: [{ symbol: 'N', count: 1 }, { symbol: 'H', count: 3 }], targetCoeff: 2 }
+    ],
+    explanation: 'N₂ + 3H₂ ➔ 2NH₃ (Haber Process): 2 Nitrogen and 6 Hydrogen atoms balanced in equilibrium.'
+  },
+  {
+    id: 3,
+    title: 'Combustion of Methane',
+    reactants: [
+      { formula: 'CH₄', atoms: [{ symbol: 'C', count: 1 }, { symbol: 'H', count: 4 }], targetCoeff: 1 },
+      { formula: 'O₂', atoms: [{ symbol: 'O', count: 2 }], targetCoeff: 2 }
+    ],
+    products: [
+      { formula: 'CO₂', atoms: [{ symbol: 'C', count: 1 }, { symbol: 'O', count: 2 }], targetCoeff: 1 },
+      { formula: 'H₂O', atoms: [{ symbol: 'H', count: 2 }, { symbol: 'O', count: 1 }], targetCoeff: 2 }
+    ],
+    explanation: 'CH₄ + 2O₂ ➔ CO₂ + 2H₂O: Exothermic natural gas combustion with 1 Carbon, 4 Hydrogen, 4 Oxygen.'
+  }
 ];
 
-const GRID_SIZE = 20;
-const SPEED = 150;
-
-const BioSnakeGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
+const BalanceBeamGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const { addXP } = useStudent();
-  const [gameState, setGameState] = useState<'menu' | 'playing' | 'paused' | 'gameover'>('menu');
-  const [snake, setSnake] = useState<{x: number, y: number}[]>([{x: 10, y: 10}]);
-  const [food, setFood] = useState<{x: number, y: number}>({x: 15, y: 10});
-  const [direction, setDirection] = useState<'UP' | 'DOWN' | 'LEFT' | 'RIGHT'>('RIGHT');
-  const [score, setScore] = useState(0);
-  const [highScore, setHighScore] = useState(0);
-  const [currentFact, setCurrentFact] = useState<string>("Collect orbs to unlock facts!");
-  const [lastFactType, setLastFactType] = useState<'Formula' | 'Fact' | 'Info'>('Info');
-  
-  const directionRef = useRef(direction);
-  const gameLoopRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [levelIdx, setLevelIdx] = useState(0);
+  const currentLevel = BALANCE_LEVELS[levelIdx];
 
-  const startGame = () => {
-    setSnake([{x: 10, y: 10}, {x: 9, y: 10}, {x: 8, y: 10}]);
-    setFood(generateFood());
-    setDirection('RIGHT');
-    directionRef.current = 'RIGHT';
-    setScore(0);
-    setGameState('playing');
-    setCurrentFact("Collect orbs to unlock facts!");
-    setLastFactType('Info');
-  };
-
-  const generateFood = () => {
-    return {
-      x: Math.floor(Math.random() * GRID_SIZE),
-      y: Math.floor(Math.random() * GRID_SIZE)
-    };
-  };
-
-  const handleInput = useCallback((newDir: 'UP' | 'DOWN' | 'LEFT' | 'RIGHT') => {
-    const current = directionRef.current;
-    if (newDir === 'UP' && current === 'DOWN') return;
-    if (newDir === 'DOWN' && current === 'UP') return;
-    if (newDir === 'LEFT' && current === 'RIGHT') return;
-    if (newDir === 'RIGHT' && current === 'LEFT') return;
-    setDirection(newDir);
-    directionRef.current = newDir;
-  }, []);
+  const [reactantCoeffs, setReactantCoeffs] = useState<number[]>(currentLevel.reactants.map(() => 1));
+  const [productCoeffs, setProductCoeffs] = useState<number[]>(currentLevel.products.map(() => 1));
+  const [isBalanced, setIsBalanced] = useState(false);
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (gameState !== 'playing') return;
-      switch(e.key) {
-        case 'ArrowUp': case 'w': handleInput('UP'); break;
-        case 'ArrowDown': case 's': handleInput('DOWN'); break;
-        case 'ArrowLeft': case 'a': handleInput('LEFT'); break;
-        case 'ArrowRight': case 'd': handleInput('RIGHT'); break;
-        case ' ': setGameState('paused'); break;
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [gameState, handleInput]);
+    setReactantCoeffs(currentLevel.reactants.map(() => 1));
+    setProductCoeffs(currentLevel.products.map(() => 1));
+    setIsBalanced(false);
+  }, [levelIdx]);
 
-  useEffect(() => {
-    if (gameState === 'playing') {
-      gameLoopRef.current = setInterval(() => {
-        moveSnake();
-      }, SPEED);
+  const countAtoms = (side: 'reactants' | 'products') => {
+    const counts: Record<string, number> = {};
+    if (side === 'reactants') {
+      currentLevel.reactants.forEach((species, i) => {
+        const coeff = reactantCoeffs[i] || 1;
+        species.atoms.forEach(atom => {
+          counts[atom.symbol] = (counts[atom.symbol] || 0) + atom.count * coeff;
+        });
+      });
     } else {
-      if (gameLoopRef.current) clearInterval(gameLoopRef.current);
+      currentLevel.products.forEach((species, i) => {
+        const coeff = productCoeffs[i] || 1;
+        species.atoms.forEach(atom => {
+          counts[atom.symbol] = (counts[atom.symbol] || 0) + atom.count * coeff;
+        });
+      });
     }
-    return () => {
-      if (gameLoopRef.current) clearInterval(gameLoopRef.current);
-    };
-  }, [gameState, snake]);
+    return counts;
+  };
 
-  const moveSnake = () => {
-    const newSnake = [...snake];
-    const head = { ...newSnake[0] };
+  const leftCounts = countAtoms('reactants');
+  const rightCounts = countAtoms('products');
 
-    switch (directionRef.current) {
-      case 'UP': head.y -= 1; break;
-      case 'DOWN': head.y += 1; break;
-      case 'LEFT': head.x -= 1; break;
-      case 'RIGHT': head.x += 1; break;
+  const totalLeftAtoms = Object.values(leftCounts).reduce((a, b) => a + b, 0);
+  const totalRightAtoms = Object.values(rightCounts).reduce((a, b) => a + b, 0);
+
+  useEffect(() => {
+    const allElements = Array.from(new Set([...Object.keys(leftCounts), ...Object.keys(rightCounts)]));
+    const balanced = allElements.every(el => (leftCounts[el] || 0) === (rightCounts[el] || 0));
+
+    if (balanced && !isBalanced) {
+      setIsBalanced(true);
+      sounds.playVictory();
+      addXP(30);
+    } else if (!balanced && isBalanced) {
+      setIsBalanced(false);
     }
+  }, [reactantCoeffs, productCoeffs]);
 
-    if (
-      head.x < 0 || head.x >= GRID_SIZE || 
-      head.y < 0 || head.y >= GRID_SIZE || 
-      newSnake.some(seg => seg.x === head.x && seg.y === head.y)
-    ) {
-      setGameState('gameover');
-      if (score > highScore) setHighScore(score);
+  const tiltDeg = Math.min(10, Math.max(-10, (totalRightAtoms - totalLeftAtoms) * 2));
+
+  return (
+    <div className="bg-slate-950 text-white rounded-3xl p-6 border border-slate-800 shadow-2xl space-y-6">
+      <div className="flex justify-between items-center pb-4 border-b border-slate-800">
+        <button onClick={onBack} className="flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-white transition-colors">
+          <ArrowLeft size={16} /> Back to Arcade Hub
+        </button>
+        <span className="text-xs font-bold text-amber-400 uppercase tracking-wider">
+          Level {levelIdx + 1} of {BALANCE_LEVELS.length}: {currentLevel.title}
+        </span>
+      </div>
+
+      {/* Tilting Physical Balance Scale */}
+      <div className="relative py-8 flex flex-col items-center">
+        <div className="w-16 h-12 bg-slate-800 border-2 border-slate-600 rounded-t-full relative z-10 flex items-center justify-center shadow-lg">
+          <div className="w-4 h-4 rounded-full bg-cyan-400 shadow-[0_0_10px_#22d3ee]"></div>
+        </div>
+
+        <div 
+          className="w-full max-w-xl h-4 bg-gradient-to-r from-amber-500 via-slate-600 to-cyan-500 rounded-full transition-transform duration-500 relative -mt-2 shadow-2xl flex items-center justify-between px-4"
+          style={{ transform: `rotate(${tiltDeg}deg)` }}
+        >
+          {/* Left Pan */}
+          <div className="absolute -left-4 top-4 flex flex-col items-center">
+            <div className="w-0.5 h-16 bg-slate-400"></div>
+            <div className="w-36 h-12 bg-slate-900 border-2 border-amber-400 rounded-b-3xl flex flex-wrap items-center justify-center gap-1 p-1 shadow-lg">
+              {Object.entries(leftCounts).map(([el, cnt]) => (
+                <span key={el} className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-bold">
+                  {el}: {cnt}
+                </span>
+              ))}
+            </div>
+            <span className="text-[10px] font-bold text-amber-400 mt-1">Reactants Pan</span>
+          </div>
+
+          {/* Right Pan */}
+          <div className="absolute -right-4 top-4 flex flex-col items-center">
+            <div className="w-0.5 h-16 bg-slate-400"></div>
+            <div className="w-36 h-12 bg-slate-900 border-2 border-cyan-400 rounded-b-3xl flex flex-wrap items-center justify-center gap-1 p-1 shadow-lg">
+              {Object.entries(rightCounts).map(([el, cnt]) => (
+                <span key={el} className="px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 text-[10px] font-bold">
+                  {el}: {cnt}
+                </span>
+              ))}
+            </div>
+            <span className="text-[10px] font-bold text-cyan-400 mt-1">Products Pan</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Stepper Controls */}
+      <div className="bg-slate-900/80 p-6 rounded-2xl border border-slate-800 flex flex-wrap items-center justify-center gap-6 mt-8">
+        <div className="flex items-center gap-4">
+          {currentLevel.reactants.map((spec, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <div className="flex flex-col items-center">
+                <button
+                  onClick={() => {
+                    sounds.playClick();
+                    const updated = [...reactantCoeffs];
+                    updated[i] = Math.min(6, updated[i] + 1);
+                    setReactantCoeffs(updated);
+                  }}
+                  className="w-7 h-6 bg-slate-800 hover:bg-slate-700 text-white rounded-t-lg font-bold text-xs"
+                >
+                  ▲
+                </button>
+                <div className="w-7 h-8 bg-amber-500 text-black font-black text-sm flex items-center justify-center">
+                  {reactantCoeffs[i]}
+                </div>
+                <button
+                  onClick={() => {
+                    sounds.playClick();
+                    const updated = [...reactantCoeffs];
+                    updated[i] = Math.max(1, updated[i] - 1);
+                    setReactantCoeffs(updated);
+                  }}
+                  className="w-7 h-6 bg-slate-800 hover:bg-slate-700 text-white rounded-b-lg font-bold text-xs"
+                >
+                  ▼
+                </button>
+              </div>
+              <span className="text-xl font-bold font-mono text-white">{spec.formula}</span>
+              {i < currentLevel.reactants.length - 1 && <span className="text-xl text-slate-500 font-bold">+</span>}
+            </div>
+          ))}
+        </div>
+
+        <span className="text-2xl text-cyan-400 font-bold">➔</span>
+
+        <div className="flex items-center gap-4">
+          {currentLevel.products.map((spec, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <div className="flex flex-col items-center">
+                <button
+                  onClick={() => {
+                    sounds.playClick();
+                    const updated = [...productCoeffs];
+                    updated[i] = Math.min(6, updated[i] + 1);
+                    setProductCoeffs(updated);
+                  }}
+                  className="w-7 h-6 bg-slate-800 hover:bg-slate-700 text-white rounded-t-lg font-bold text-xs"
+                >
+                  ▲
+                </button>
+                <div className="w-7 h-8 bg-cyan-500 text-black font-black text-sm flex items-center justify-center">
+                  {productCoeffs[i]}
+                </div>
+                <button
+                  onClick={() => {
+                    sounds.playClick();
+                    const updated = [...productCoeffs];
+                    updated[i] = Math.max(1, updated[i] - 1);
+                    setProductCoeffs(updated);
+                  }}
+                  className="w-7 h-6 bg-slate-800 hover:bg-slate-700 text-white rounded-b-lg font-bold text-xs"
+                >
+                  ▼
+                </button>
+              </div>
+              <span className="text-xl font-bold font-mono text-white">{spec.formula}</span>
+              {i < currentLevel.products.length - 1 && <span className="text-xl text-slate-500 font-bold">+</span>}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {isBalanced ? (
+        <div className="bg-emerald-950/80 border-2 border-emerald-500 p-5 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 animate-[scaleIn_0.3s_ease-out]">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-emerald-500 rounded-2xl text-black">
+              <Star size={24} fill="currentColor" />
+            </div>
+            <div>
+              <h4 className="font-bold text-emerald-400 text-base">Perfect Equilibrium Achieved! ⭐⭐⭐</h4>
+              <p className="text-xs text-emerald-200 mt-0.5">{currentLevel.explanation}</p>
+            </div>
+          </div>
+          <button
+            onClick={() => {
+              sounds.playClick();
+              if (levelIdx < BALANCE_LEVELS.length - 1) {
+                setLevelIdx(prev => prev + 1);
+              } else {
+                onBack();
+              }
+            }}
+            className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs rounded-xl shadow-lg flex items-center gap-1.5"
+          >
+            {levelIdx < BALANCE_LEVELS.length - 1 ? 'Next Challenge' : 'Complete Quest'} <ChevronRight size={16} />
+          </button>
+        </div>
+      ) : (
+        <div className="text-center text-xs text-slate-400 font-medium">
+          Adjust coefficients until every element's atom count on the Left Pan equals the Right Pan!
+        </div>
+      )}
+    </div>
+  );
+};
+
+// =========================================================================
+// GAME 2: CIRCUIT MASTER (Power Grid Puzzle)
+// =========================================================================
+const CircuitMasterGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
+  const { addXP } = useStudent();
+  const [targetCurrent, setTargetCurrent] = useState(2.0);
+  const [selectedBattery, setSelectedBattery] = useState(12);
+  const [selectedResistor, setSelectedResistor] = useState(6);
+  const [hasSolved, setHasSolved] = useState(false);
+
+  const current = Number((selectedBattery / selectedResistor).toFixed(2));
+
+  const checkCircuit = () => {
+    if (Math.abs(current - targetCurrent) < 0.05) {
+      setHasSolved(true);
+      sounds.playVictory();
+      addXP(35);
+    } else {
+      sounds.playWrong();
+    }
+  };
+
+  return (
+    <div className="bg-slate-950 text-white rounded-3xl p-6 border border-slate-800 shadow-2xl space-y-6">
+      <div className="flex justify-between items-center pb-4 border-b border-slate-800">
+        <button onClick={onBack} className="flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-white">
+          <ArrowLeft size={16} /> Back to Arcade Hub
+        </button>
+        <span className="text-xs font-bold text-cyan-400 uppercase tracking-wider">
+          Ohm's Law Substation Challenge
+        </span>
+      </div>
+
+      <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex items-center justify-between">
+        <div>
+          <span className="text-[10px] text-slate-400 uppercase font-mono">Mission Directive:</span>
+          <h4 className="font-bold text-sm text-white">Power the Central Science Lab</h4>
+          <p className="text-xs text-slate-400">Deliver exact target current of <strong className="text-cyan-400">{targetCurrent} A</strong> using Ohm's Law (I = V / R).</p>
+        </div>
+        <div className="text-right">
+          <div className="text-[10px] text-slate-400">Target Current</div>
+          <div className="text-2xl font-black text-cyan-400 font-mono">{targetCurrent} A</div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-6">
+        <div className="space-y-4">
+          <div>
+            <label className="text-xs font-bold text-slate-300 block mb-2">1. Choose DC Power Source (V):</label>
+            <div className="grid grid-cols-3 gap-2">
+              {[6, 12, 24].map(v => (
+                <button
+                  key={v}
+                  onClick={() => {
+                    sounds.playClick();
+                    setSelectedBattery(v);
+                  }}
+                  className={`p-3 rounded-xl border text-xs font-bold transition-all ${
+                    selectedBattery === v ? 'border-cyan-400 bg-cyan-950/40 text-cyan-300 shadow-md' : 'border-slate-800 bg-slate-900 text-slate-400'
+                  }`}
+                >
+                  {v} Volts DC
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="text-xs font-bold text-slate-300 block mb-2">2. Choose Load Resistor (R):</label>
+            <div className="grid grid-cols-4 gap-2">
+              {[2, 4, 6, 12].map(r => (
+                <button
+                  key={r}
+                  onClick={() => {
+                    sounds.playClick();
+                    setSelectedResistor(r);
+                  }}
+                  className={`p-3 rounded-xl border text-xs font-bold transition-all ${
+                    selectedResistor === r ? 'border-amber-400 bg-amber-950/40 text-amber-300 shadow-md' : 'border-slate-800 bg-slate-900 text-slate-400'
+                  }`}
+                >
+                  {r} Ω
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <button
+            onClick={checkCircuit}
+            className="w-full py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-2"
+          >
+            <Zap size={16} /> Engage Master Circuit Breaker
+          </button>
+        </div>
+
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col items-center justify-center relative">
+          <div 
+            className="w-24 h-24 rounded-full border-2 border-amber-400/50 flex items-center justify-center mb-4 transition-all duration-300"
+            style={{
+              backgroundColor: `rgba(251, 191, 36, ${Math.min(1, current / 3)})`,
+              boxShadow: hasSolved ? '0 0 40px rgba(251, 191, 36, 0.9)' : 'none'
+            }}
+          >
+            <Zap size={40} className={hasSolved ? 'text-black' : 'text-slate-500'} />
+          </div>
+
+          <div className="text-center">
+            <span className="text-[10px] text-slate-400 uppercase font-mono">Real-Time Amperage:</span>
+            <div className="text-3xl font-black text-white font-mono mt-1">{current} A</div>
+            <div className="text-xs text-slate-400 mt-1">Formula: I = {selectedBattery}V / {selectedResistor}Ω = {current}A</div>
+          </div>
+        </div>
+      </div>
+
+      {hasSolved && (
+        <div className="bg-emerald-950/80 border border-emerald-500 p-4 rounded-2xl flex items-center justify-between animate-[scaleIn_0.2s_ease-out]">
+          <div className="flex items-center gap-2 text-emerald-300 text-xs font-bold">
+            <CheckCircle2 size={18} className="text-emerald-400" />
+            Grid Online! Safe operating current delivered (+35 XP).
+          </div>
+          <button onClick={onBack} className="px-4 py-1.5 bg-emerald-500 text-black text-xs font-black rounded-lg">
+            Return to Hub
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// =========================================================================
+// GAME 3: ELEMENT SPEED RUSH (Time-Attack Arcade)
+// =========================================================================
+interface ElementCard {
+  name: string;
+  symbol: string;
+  category: 'METAL' | 'NON_METAL' | 'NOBLE_GAS';
+  z: number;
+}
+
+const ELEMENT_POOL: ElementCard[] = [
+  { name: 'Sodium', symbol: 'Na', category: 'METAL', z: 11 },
+  { name: 'Chlorine', symbol: 'Cl', category: 'NON_METAL', z: 17 },
+  { name: 'Helium', symbol: 'He', category: 'NOBLE_GAS', z: 2 },
+  { name: 'Iron', symbol: 'Fe', category: 'METAL', z: 26 },
+  { name: 'Oxygen', symbol: 'O', category: 'NON_METAL', z: 8 },
+  { name: 'Neon', symbol: 'Ne', category: 'NOBLE_GAS', z: 10 },
+  { name: 'Copper', symbol: 'Cu', category: 'METAL', z: 29 },
+  { name: 'Carbon', symbol: 'C', category: 'NON_METAL', z: 6 },
+  { name: 'Argon', symbol: 'Ar', category: 'NOBLE_GAS', z: 18 },
+  { name: 'Magnesium', symbol: 'Mg', category: 'METAL', z: 12 },
+  { name: 'Nitrogen', symbol: 'N', category: 'NON_METAL', z: 7 },
+  { name: 'Krypton', symbol: 'Kr', category: 'NOBLE_GAS', z: 36 }
+];
+
+const ElementRushGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
+  const { addXP } = useStudent();
+  const [score, setScore] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(30);
+  const [cardIdx, setCardIdx] = useState(0);
+  const [gameOver, setGameOver] = useState(false);
+  const [combo, setCombo] = useState(1);
+
+  const currentElement = ELEMENT_POOL[cardIdx % ELEMENT_POOL.length];
+
+  useEffect(() => {
+    if (timeLeft <= 0) {
+      setGameOver(true);
+      sounds.playVictory();
+      addXP(score * 2);
       return;
     }
+    const timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
+    return () => clearInterval(timer);
+  }, [timeLeft]);
 
-    newSnake.unshift(head);
-
-    if (head.x === food.x && head.y === food.y) {
-      setScore(s => s + 10);
-      setFood(generateFood());
-      const randomFact = KNOWLEDGE_BITES[Math.floor(Math.random() * KNOWLEDGE_BITES.length)];
-      setCurrentFact(randomFact.text);
-      setLastFactType(randomFact.type as any);
-      addXP(5); 
+  const handleClassify = (cat: 'METAL' | 'NON_METAL' | 'NOBLE_GAS') => {
+    if (gameOver) return;
+    if (currentElement.category === cat) {
+      sounds.playCorrect();
+      setScore(prev => prev + 10 * combo);
+      setCombo(prev => Math.min(5, prev + 1));
     } else {
-      newSnake.pop();
+      sounds.playWrong();
+      setCombo(1);
     }
-    setSnake(newSnake);
+    setCardIdx(prev => prev + 1);
   };
 
   return (
-    <div className="w-full h-full flex flex-col p-4 bg-slate-900 rounded-3xl border-4 border-slate-800 shadow-2xl relative overflow-hidden font-mono">
-      {/* Header */}
-      <div className="z-10 w-full flex justify-between items-center mb-4 text-green-400">
-        <div className="flex items-center gap-3">
-            <button onClick={onBack} className="p-1 hover:bg-slate-800 rounded"><ArrowLeft size={20}/></button>
-            <div>
-                <h2 className="text-xl font-black italic tracking-tighter flex items-center gap-2">
-                    <Zap size={20} className="animate-pulse" /> BIO-SNAKE
-                </h2>
-                <p className="text-[10px] text-green-600">EAT ORBS. LEARN FACTS.</p>
-            </div>
-        </div>
-        <div className="text-right">
-           <div className="text-2xl font-bold">{score}</div>
-           <div className="text-[10px] opacity-70">HIGH: {highScore}</div>
+    <div className="bg-slate-950 text-white rounded-3xl p-6 border border-slate-800 shadow-2xl space-y-6">
+      <div className="flex justify-between items-center pb-4 border-b border-slate-800">
+        <button onClick={onBack} className="flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-white">
+          <ArrowLeft size={16} /> Back to Arcade Hub
+        </button>
+        <div className="flex items-center gap-4">
+          <span className="text-xs font-mono font-bold text-amber-400">⏳ {timeLeft}s remaining</span>
+          <span className="text-xs font-mono font-bold text-emerald-400">Score: {score} ({combo}x Combo)</span>
         </div>
       </div>
 
-      {/* Game Board */}
-      <div className="relative z-10 mx-auto bg-black/80 border-2 border-green-900 rounded-lg p-1 shadow-[0_0_20px_rgba(34,197,94,0.2)]">
-        {/* Toast */}
-        <div className={`absolute top-4 left-1/2 -translate-x-1/2 w-[90%] text-center pointer-events-none transition-all duration-300 ${gameState === 'playing' ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
-            <div className={`inline-block px-4 py-2 rounded-full text-xs font-bold border shadow-lg backdrop-blur-md ${lastFactType === 'Formula' ? 'bg-blue-900/80 border-blue-500 text-blue-200' : 'bg-purple-900/80 border-purple-500 text-purple-200'}`}>
-                <span className="uppercase opacity-70 mr-2">{lastFactType}:</span>{currentFact}
-            </div>
+      {!gameOver ? (
+        <div className="flex flex-col items-center py-8">
+          <div className="w-40 h-48 bg-slate-900 border-2 border-purple-500 rounded-3xl flex flex-col items-center justify-center shadow-2xl p-4 mb-8 transform hover:scale-105 transition-transform">
+            <span className="text-xs font-mono text-purple-300 font-bold mb-1">Z = {currentElement.z}</span>
+            <span className="text-4xl font-black text-purple-400 font-mono">{currentElement.symbol}</span>
+            <span className="text-sm font-bold text-white mt-2">{currentElement.name}</span>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3 w-full max-w-md">
+            <button
+              onClick={() => handleClassify('METAL')}
+              className="py-3 bg-amber-600 hover:bg-amber-500 text-white rounded-2xl text-xs font-black shadow-lg"
+            >
+              1. Metal
+            </button>
+            <button
+              onClick={() => handleClassify('NON_METAL')}
+              className="py-3 bg-cyan-600 hover:bg-cyan-500 text-white rounded-2xl text-xs font-black shadow-lg"
+            >
+              2. Non-Metal
+            </button>
+            <button
+              onClick={() => handleClassify('NOBLE_GAS')}
+              className="py-3 bg-purple-600 hover:bg-purple-500 text-white rounded-2xl text-xs font-black shadow-lg"
+            >
+              3. Noble Gas
+            </button>
+          </div>
         </div>
-
-        {gameState === 'menu' && (
-             <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 z-20 text-center">
-                 <Brain size={48} className="text-green-500 mb-4 animate-bounce" />
-                 <h3 className="text-white font-bold text-lg mb-2">Ready to Learn?</h3>
-                 <button onClick={startGame} className="px-6 py-2 bg-green-600 hover:bg-green-500 text-black font-bold rounded flex items-center gap-2"><Play size={16} /> START GAME</button>
-             </div>
-        )}
-
-        {gameState === 'gameover' && (
-             <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 z-20 text-center">
-                 <Trophy size={48} className="text-yellow-500 mb-4" />
-                 <h3 className="text-white font-bold text-lg mb-1">Game Over!</h3>
-                 <p className="text-gray-400 text-sm mb-4">Score: {score}</p>
-                 <button onClick={startGame} className="px-6 py-2 bg-green-600 hover:bg-green-500 text-black font-bold rounded flex items-center gap-2"><RefreshCw size={16} /> TRY AGAIN</button>
-             </div>
-        )}
-
-        {/* Grid */}
-        <div className="grid gap-px bg-gray-900" style={{ gridTemplateColumns: `repeat(${GRID_SIZE}, 1fr)`, width: '300px', height: '300px' }}>
-          {Array.from({ length: GRID_SIZE * GRID_SIZE }).map((_, i) => {
-            const x = i % GRID_SIZE;
-            const y = Math.floor(i / GRID_SIZE);
-            const isSnake = snake.some(s => s.x === x && s.y === y);
-            const isFood = food.x === x && food.y === y;
-            const isHead = snake[0].x === x && snake[0].y === y;
-            return <div key={i} className={`w-full h-full rounded-sm transition-all duration-100 ${isHead ? 'bg-green-400 shadow-[0_0_10px_#4ade80] z-10' : isSnake ? 'bg-green-600' : isFood ? 'bg-yellow-400 animate-pulse rounded-full shadow-[0_0_10px_#facc15]' : 'bg-transparent'}`}></div>;
-          })}
+      ) : (
+        <div className="py-12 text-center space-y-4">
+          <Trophy size={48} className="mx-auto text-amber-400" />
+          <h3 className="text-2xl font-black text-white">Time's Up!</h3>
+          <p className="text-sm text-slate-400">Final Arcade Score: <strong className="text-white">{score}</strong> points (+{score * 2} XP)</p>
+          <button
+            onClick={() => {
+              setTimeLeft(30);
+              setScore(0);
+              setCombo(1);
+              setGameOver(false);
+            }}
+            className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl"
+          >
+            Play Again
+          </button>
         </div>
-      </div>
-
-      {/* Mobile Controls */}
-      <div className="mt-4 z-10 grid grid-cols-3 gap-2 max-w-[200px] mx-auto">
-          <div></div>
-          <button onClick={() => handleInput('UP')} className="p-3 bg-gray-800 rounded-xl active:bg-gray-700 shadow-lg border-b-4 border-gray-950 active:border-b-0 active:translate-y-1"><ChevronUp className="text-white"/></button>
-          <div></div>
-          <button onClick={() => handleInput('LEFT')} className="p-3 bg-gray-800 rounded-xl active:bg-gray-700 shadow-lg border-b-4 border-gray-950 active:border-b-0 active:translate-y-1"><ChevronLeft className="text-white"/></button>
-          <button onClick={() => setGameState(g => g === 'playing' ? 'paused' : 'playing')} className="p-3 bg-gray-800 rounded-xl active:bg-gray-700 shadow-lg border-b-4 border-gray-950 active:border-b-0 active:translate-y-1">{gameState === 'playing' ? <Pause className="text-yellow-500" /> : <Play className="text-green-500"/>}</button>
-          <button onClick={() => handleInput('RIGHT')} className="p-3 bg-gray-800 rounded-xl active:bg-gray-700 shadow-lg border-b-4 border-gray-950 active:border-b-0 active:translate-y-1"><ChevronRight className="text-white"/></button>
-          <div></div>
-          <button onClick={() => handleInput('DOWN')} className="p-3 bg-gray-800 rounded-xl active:bg-gray-700 shadow-lg border-b-4 border-gray-950 active:border-b-0 active:translate-y-1"><ChevronDown className="text-white"/></button>
-          <div></div>
-      </div>
+      )}
     </div>
   );
 };
 
-// --- GAME 2: MOLECULAR MEMORY LOGIC ---
-const MEMORY_CARDS_DATA = [
-  { id: 1, content: 'H₂O', matchId: 2, type: 'formula' }, { id: 2, content: 'Water', matchId: 1, type: 'name' },
-  { id: 3, content: 'NaCl', matchId: 4, type: 'formula' }, { id: 4, content: 'Salt', matchId: 3, type: 'name' },
-  { id: 5, content: 'CO₂', matchId: 6, type: 'formula' }, { id: 6, content: 'Carbon Dioxide', matchId: 5, type: 'name' },
-  { id: 7, content: 'O₂', matchId: 8, type: 'formula' }, { id: 8, content: 'Oxygen', matchId: 7, type: 'name' },
-  { id: 9, content: 'HCl', matchId: 10, type: 'formula' }, { id: 10, content: 'Hydrochloric Acid', matchId: 9, type: 'name' },
-  { id: 11, content: 'Au', matchId: 12, type: 'formula' }, { id: 12, content: 'Gold', matchId: 11, type: 'name' },
-];
-
-const MolecularMemoryGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
+// =========================================================================
+// GAME 4: OPTICS RAY MAZE (Reflection & Snell's Law Refraction)
+// =========================================================================
+const OpticsMazeGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const { addXP } = useStudent();
-  const [cards, setCards] = useState<any[]>([]);
-  const [flipped, setFlipped] = useState<number[]>([]);
-  const [solved, setSolved] = useState<number[]>([]);
-  const [moves, setMoves] = useState(0);
-  const [won, setWon] = useState(false);
-  const [disabled, setDisabled] = useState(false);
+  const [mirrorAngle, setMirrorAngle] = useState(45); // Degrees (Target is 45 to reflect 90 deg into target sensor!)
+  const [laserOn, setLaserOn] = useState(true);
+  const [solved, setSolved] = useState(false);
+
+  // Target angle is 45 deg (incident at 45 deg -> reflection at 45 deg hits sensor at top)
+  const isAligned = Math.abs(mirrorAngle - 45) < 3;
 
   useEffect(() => {
-    shuffleCards();
-  }, []);
-
-  const shuffleCards = () => {
-    const shuffled = [...MEMORY_CARDS_DATA]
-      .sort(() => Math.random() - 0.5)
-      .map((card) => ({ ...card, key: Math.random() })); // Add random key to force re-render
-    setCards(shuffled);
-    setFlipped([]);
-    setSolved([]);
-    setMoves(0);
-    setWon(false);
-  };
-
-  const handleClick = (index: number) => {
-    if (disabled || flipped.includes(index) || solved.includes(index)) return;
-
-    if (flipped.length === 0) {
-      setFlipped([index]);
-    } else {
-      setFlipped([flipped[0], index]);
-      setDisabled(true);
-      setMoves(m => m + 1);
-      checkForMatch(index);
+    if (isAligned && !solved) {
+      setSolved(true);
+      sounds.playVictory();
+      addXP(40);
     }
-  };
-
-  const checkForMatch = (secondIndex: number) => {
-    const firstIndex = flipped[0];
-    if (cards[firstIndex].matchId === cards[secondIndex].id) {
-      setSolved(prev => [...prev, firstIndex, secondIndex]);
-      setFlipped([]);
-      setDisabled(false);
-      addXP(5); // XP per match
-      if (solved.length + 2 === cards.length) setWon(true);
-    } else {
-      setTimeout(() => {
-        setFlipped([]);
-        setDisabled(false);
-      }, 1000);
-    }
-  };
+  }, [mirrorAngle, isAligned, solved]);
 
   return (
-    <div className="w-full h-full flex flex-col p-4 bg-slate-900 rounded-3xl border-4 border-slate-800 shadow-2xl relative overflow-hidden font-sans">
-      <div className="z-10 w-full flex justify-between items-center mb-4 text-cyan-400">
-        <div className="flex items-center gap-3">
-            <button onClick={onBack} className="p-1 hover:bg-slate-800 rounded"><ArrowLeft size={20}/></button>
-            <div>
-                <h2 className="text-xl font-black flex items-center gap-2">
-                    <Grid size={20} /> MOLECULAR MEMORY
-                </h2>
-                <p className="text-[10px] text-cyan-600">MATCH FORMULAS. TRAIN BRAIN.</p>
-            </div>
+    <div className="bg-slate-950 text-white rounded-3xl p-6 border border-slate-800 shadow-2xl space-y-6">
+      <div className="flex justify-between items-center pb-4 border-b border-slate-800">
+        <button onClick={onBack} className="flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-white">
+          <ArrowLeft size={16} /> Back to Arcade Hub
+        </button>
+        <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">
+          NCERT Ch 10 • Optics Ray Reflection Maze
+        </span>
+      </div>
+
+      <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex items-center justify-between">
+        <div>
+          <span className="text-[10px] text-slate-400 uppercase font-mono">Mission Directive:</span>
+          <h4 className="font-bold text-sm text-white">Target Sensor Photoelectric Lock</h4>
+          <p className="text-xs text-slate-400">
+            Rotate the plane mirror so the reflected laser ray (<strong className="text-emerald-400">∠i = ∠r</strong>) hits the photoelectric target sensor at the top.
+          </p>
         </div>
         <div className="text-right">
-           <div className="text-2xl font-bold">{moves}</div>
-           <div className="text-[10px] opacity-70">MOVES</div>
+          <div className="text-[10px] text-slate-400">Current Mirror Angle</div>
+          <div className="text-2xl font-black text-emerald-400 font-mono">{mirrorAngle}°</div>
         </div>
       </div>
 
-      <div className="relative flex-1 flex flex-col items-center justify-center">
-        {won && (
-             <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 z-20 text-center animate-in fade-in">
-                 <CheckCircle2 size={64} className="text-cyan-400 mb-4" />
-                 <h3 className="text-white font-bold text-2xl mb-2">Level Complete!</h3>
-                 <p className="text-cyan-200 mb-6">You mastered the molecules in {moves} moves.</p>
-                 <button onClick={shuffleCards} className="px-8 py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl shadow-lg transition-transform hover:scale-105">
-                    PLAY AGAIN
-                 </button>
-             </div>
-        )}
+      {/* Optical Bench Canvas */}
+      <div className="relative h-72 bg-slate-900/90 rounded-3xl border border-slate-800 overflow-hidden flex items-center justify-center">
+        
+        {/* Optical grid */}
+        <div className="absolute inset-0 opacity-10" style={{
+          backgroundImage: 'radial-gradient(#34d399 1px, transparent 1px)',
+          backgroundSize: '24px 24px'
+        }}></div>
 
-        <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 w-full max-w-sm">
-            {cards.map((card, index) => {
-                const isFlipped = flipped.includes(index) || solved.includes(index);
-                return (
-                    <div 
-                        key={card.key}
-                        onClick={() => handleClick(index)}
-                        className={`aspect-square cursor-pointer relative perspective-1000 group`}
-                    >
-                        <div className={`w-full h-full transition-all duration-500 transform-style-3d rounded-xl shadow-md border-2
-                            ${isFlipped ? 'bg-cyan-900 border-cyan-400 rotate-y-180' : 'bg-slate-800 border-slate-700 hover:border-cyan-700'}
-                        `}>
-                            {/* Front (Hidden) */}
-                            {!isFlipped && (
-                                <div className="absolute inset-0 flex items-center justify-center text-cyan-900 opacity-20">
-                                    <Grid size={24} />
-                                </div>
-                            )}
-                            {/* Back (Revealed) */}
-                            {isFlipped && (
-                                <div className="absolute inset-0 flex items-center justify-center text-center p-1">
-                                    <span className={`font-bold ${card.type === 'formula' ? 'text-2xl text-white' : 'text-xs text-cyan-200 uppercase tracking-tighter'}`}>
-                                        {card.content}
-                                    </span>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                );
-            })}
+        {/* Laser Emitter (Left) */}
+        <div className="absolute left-6 top-1/2 -translate-y-1/2 flex items-center gap-2">
+          <div className="w-12 h-8 bg-red-600 rounded-lg flex items-center justify-center shadow-lg border border-red-400">
+            <span className="text-[9px] font-mono font-bold text-white">LASER</span>
+          </div>
+        </div>
+
+        {/* Target Photo-Sensor (Top Center) */}
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 flex flex-col items-center">
+          <div className={`w-14 h-8 rounded-lg flex items-center justify-center border transition-all ${
+            isAligned ? 'bg-emerald-500 border-emerald-300 shadow-[0_0_20px_#10b981]' : 'bg-slate-800 border-slate-700'
+          }`}>
+            <span className="text-[9px] font-mono font-bold text-white">
+              {isAligned ? 'LOCKED!' : 'SENSOR'}
+            </span>
+          </div>
+          <div className="w-1 h-3 bg-slate-600"></div>
+        </div>
+
+        {/* SVG Ray Tracing */}
+        <svg className="w-full h-full absolute inset-0 pointer-events-none">
+          {/* Incident Ray (from Laser to Center Mirror) */}
+          <line x1="60" y1="144" x2="350" y2="144" stroke="#ef4444" strokeWidth="2.5" />
+          
+          {/* Reflected Ray based on mirror angle */}
+          {laserOn && (
+            <line 
+              x1="350" 
+              y1="144" 
+              x2={350 + Math.cos(((mirrorAngle * 2 - 90) * Math.PI) / 180) * 220} 
+              y2={144 - Math.sin(((mirrorAngle * 2 - 90) * Math.PI) / 180) * 220} 
+              stroke={isAligned ? '#10b981' : '#ef4444'} 
+              strokeWidth="2.5"
+              strokeDasharray={isAligned ? 'none' : '4,4'}
+            />
+          )}
+
+          {/* Plane Mirror (Rotates in center at (350, 144)) */}
+          <g transform={`translate(350, 144) rotate(${mirrorAngle})`}>
+            <line x1="0" y1="-45" x2="0" y2="45" stroke="#38bdf8" strokeWidth="6" strokeLinecap="round" />
+            <line x1="4" y1="-45" x2="4" y2="45" stroke="#94a3b8" strokeWidth="2" strokeDasharray="3,3" />
+          </g>
+        </svg>
+
+        {/* Normal Line & Angle readouts */}
+        <div className="absolute bottom-4 right-4 bg-slate-950/80 px-3 py-1.5 rounded-xl border border-slate-800 text-[11px] font-mono text-slate-400">
+          Law of Reflection: <strong className="text-emerald-400">∠i = ∠r = {Math.abs(90 - mirrorAngle)}°</strong>
         </div>
       </div>
+
+      {/* Angle Stepper Controls */}
+      <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex flex-wrap justify-between items-center gap-4">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-bold text-slate-300">Adjust Mirror Angle:</span>
+          {[30, 45, 60, 75].map(deg => (
+            <button
+              key={deg}
+              onClick={() => {
+                sounds.playClick();
+                setMirrorAngle(deg);
+              }}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-mono font-bold transition-all ${
+                mirrorAngle === deg ? 'bg-emerald-500 text-black shadow-md' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+              }`}
+            >
+              {deg}°
+            </button>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={() => {
+              sounds.playClick();
+              setMirrorAngle(prev => Math.max(15, prev - 5));
+            }}
+            className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold"
+          >
+            −5°
+          </button>
+          <span className="text-xs font-mono font-bold text-emerald-400 px-2">{mirrorAngle}°</span>
+          <button 
+            onClick={() => {
+              sounds.playClick();
+              setMirrorAngle(prev => Math.min(85, prev + 5));
+            }}
+            className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold"
+          >
+            +5°
+          </button>
+        </div>
+      </div>
+
+      {solved && (
+        <div className="bg-emerald-950/80 border border-emerald-500 p-4 rounded-2xl flex items-center justify-between animate-[scaleIn_0.2s_ease-out]">
+          <div className="flex items-center gap-2 text-emerald-300 text-xs font-bold">
+            <CheckCircle2 size={18} className="text-emerald-400" />
+            Photoelectric Lock Disengaged! Law of Reflection Verified (+40 XP).
+          </div>
+          <button onClick={onBack} className="px-4 py-1.5 bg-emerald-500 text-black text-xs font-black rounded-lg">
+            Return to Hub
+          </button>
+        </div>
+      )}
     </div>
   );
 };
 
-// --- MAIN ARCADE MENU COMPONENT ---
+// =========================================================================
+// MAIN KNOWLEDGE ARCADE HUB
+// =========================================================================
 export const GameArcade: React.FC = () => {
-  const [activeGame, setActiveGame] = useState<GameView>('MENU');
-
-  if (activeGame === 'SNAKE') return <BioSnakeGame onBack={() => setActiveGame('MENU')} />;
-  if (activeGame === 'MEMORY') return <MolecularMemoryGame onBack={() => setActiveGame('MENU')} />;
+  const { digitalTwin } = useStudent();
+  const [currentView, setCurrentView] = useState<ArcadeView>('HUB');
+  const [selectedCategory, setSelectedCategory] = useState<'ALL' | 'CHEMISTRY' | 'PHYSICS' | 'DRILL'>('ALL');
+  const [soundEnabled, setSoundEnabled] = useState(true);
 
   return (
-    <div className="w-full h-[600px] flex flex-col bg-slate-900 rounded-3xl border-4 border-slate-800 shadow-2xl relative overflow-hidden">
-        {/* Animated Background */}
-        <div className="absolute inset-0 opacity-20">
-            <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(76,29,149,0.4),transparent_70%)]"></div>
-            <div className="grid grid-cols-12 h-full opacity-30">
-                {Array.from({length: 12}).map((_, i) => (
-                    <div key={i} className="border-r border-slate-700/50"></div>
-                ))}
+    <div className="w-full max-w-7xl mx-auto space-y-6 animate-[fadeIn_0.5s_ease-out]">
+      
+      {currentView === 'HUB' && (
+        <>
+          {/* Master Arcade Telemetry Banner */}
+          <div className="bg-slate-900 text-white rounded-3xl p-6 border border-slate-800 shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+              <div className="flex items-center gap-2 text-amber-400 text-xs font-bold uppercase tracking-wider mb-1">
+                <Gamepad2 size={16} /> Interactive STEM Manipulatives & Quests
+              </div>
+              <h2 className="text-2xl font-black tracking-tight">
+                Knowledge Arcade: Interactive Concept Sandbox
+              </h2>
+              <p className="text-slate-400 text-xs mt-1">
+                Hands-on stoichiometric balance scales, power grid circuit puzzles, optics ray mazes, and periodic speed challenges.
+              </p>
             </div>
-        </div>
 
-        {/* Menu Header */}
-        <div className="relative z-10 p-8 text-center">
-            <h2 className="text-4xl font-black text-white italic tracking-tighter mb-2 flex items-center justify-center gap-3 text-shadow-lg">
-                <Gamepad2 size={36} className="text-purple-500" /> KNOWLEDGE ARCADE
-            </h2>
-            <p className="text-slate-400 font-mono text-sm">SELECT A CARTRIDGE TO START</p>
-        </div>
+            <div className="flex items-center gap-3">
+              <div className="bg-amber-950/60 border border-amber-500/40 px-3.5 py-1.5 rounded-xl text-xs font-bold text-amber-400 flex items-center gap-1.5">
+                <Star size={16} fill="currentColor" /> 22/28 Stars Earned
+              </div>
+              <div className="bg-indigo-950/60 border border-indigo-500/40 px-3.5 py-1.5 rounded-xl text-xs font-bold text-indigo-400 flex items-center gap-1.5">
+                <Flame size={16} /> 1.5x XP Boost
+              </div>
+              <button
+                onClick={() => setSoundEnabled(sounds.toggleSound())}
+                className="p-2.5 rounded-xl bg-slate-800 text-slate-400 hover:text-white border border-slate-700 transition-colors"
+                title="Toggle Sound Effects"
+              >
+                {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
+              </button>
+            </div>
+          </div>
 
-        {/* Game Cards */}
-        <div className="relative z-10 flex-1 flex items-center justify-center p-6 gap-6 overflow-x-auto snap-x">
+          {/* Category Filter Pills */}
+          <div className="flex items-center gap-2">
+            {[
+              { id: 'ALL', label: 'All Challenges' },
+              { id: 'CHEMISTRY', label: 'Chemistry Manipulatives' },
+              { id: 'PHYSICS', label: 'Physics Workbenches' },
+              { id: 'DRILL', label: 'Speed Drills' }
+            ].map(cat => (
+              <button
+                key={cat.id}
+                onClick={() => {
+                  sounds.playClick();
+                  setSelectedCategory(cat.id as any);
+                }}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                  selectedCategory === cat.id 
+                    ? 'bg-slate-900 text-white shadow-sm' 
+                    : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                }`}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Game Cards Bento Grid with Interactive Miniature Previews */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             
-            {/* Card 1: Snake */}
-            <div 
-                onClick={() => setActiveGame('SNAKE')}
-                className="group relative w-64 h-80 bg-slate-800 rounded-2xl border-4 border-slate-700 hover:border-green-500 cursor-pointer transition-all duration-300 transform hover:-translate-y-2 hover:shadow-[0_0_30px_rgba(34,197,94,0.3)] snap-center shrink-0 overflow-hidden"
-            >
-                <div className="absolute inset-0 bg-green-500/10 group-hover:bg-green-500/20 transition-colors"></div>
-                <div className="absolute top-4 right-4 bg-green-900 text-green-300 text-[10px] font-bold px-2 py-1 rounded border border-green-700">POPULAR</div>
-                
-                <div className="h-1/2 flex items-center justify-center text-green-500">
-                    <Zap size={64} className="group-hover:scale-110 transition-transform duration-300" />
-                </div>
-                
-                <div className="p-4 bg-slate-900/90 h-1/2 border-t-2 border-slate-700 group-hover:border-green-500 transition-colors">
-                    <h3 className="text-xl font-bold text-white mb-1">BIO-SNAKE</h3>
-                    <p className="text-xs text-slate-400 mb-4 h-8">Eat knowledge orbs to grow. Avoid walls.</p>
-                    <div className="flex items-center gap-2 text-[10px] text-slate-500 font-mono">
-                        <Trophy size={12} /> High Score Saved
+            {/* Game 1: Reaction Balance Beam */}
+            {(selectedCategory === 'ALL' || selectedCategory === 'CHEMISTRY') && (
+              <div 
+                onClick={() => {
+                  sounds.playClick();
+                  setCurrentView('BALANCE_BEAM');
+                }}
+                className="bg-white rounded-3xl border border-slate-200 hover:border-amber-400 hover:shadow-2xl transition-all duration-300 p-6 flex flex-col justify-between cursor-pointer group"
+              >
+                <div>
+                  <div className="flex justify-between items-start mb-4">
+                    <span className="text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-800 px-3 py-1 rounded-full">
+                      NCERT Class 10 Ch 1 • Stoichiometric Balancing
+                    </span>
+                    <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md">
+                      ★★☆ Standard • +30 XP
+                    </span>
+                  </div>
+
+                  <h3 className="font-black text-xl text-slate-900 group-hover:text-amber-600 transition-colors">
+                    Reaction Balance Beam
+                  </h3>
+                  <p className="text-xs text-slate-500 leading-relaxed mt-1">
+                    Balance chemical reactions on a physical tilting balance scale. Level up as atoms on the reactant and product pans reach perfect equilibrium!
+                  </p>
+
+                  {/* Interactive Miniature Scale Preview */}
+                  <div className="my-5 p-4 rounded-2xl bg-slate-950 border border-slate-800 flex flex-col items-center justify-center relative overflow-hidden group-hover:border-amber-500/50 transition-colors">
+                    <div className="w-48 h-2 bg-gradient-to-r from-amber-400 via-slate-600 to-cyan-400 rounded-full group-hover:rotate-3 transition-transform duration-300 flex justify-between px-2 items-center">
+                      <div className="w-5 h-4 bg-amber-500 rounded-sm -mt-2 shadow-sm"></div>
+                      <div className="w-5 h-4 bg-cyan-500 rounded-sm -mt-2 shadow-sm"></div>
                     </div>
-                    <button className="mt-4 w-full py-2 bg-green-600 text-white font-bold text-xs rounded uppercase tracking-wider group-hover:bg-green-500">
-                        Insert Coin
-                    </button>
+                    <div className="w-6 h-5 bg-slate-800 rounded-t-lg mt-1 border border-slate-700"></div>
+                    <span className="text-[10px] text-slate-400 font-mono mt-2">
+                      2H₂ + O₂ ➔ 2H₂O (Conservation of Mass)
+                    </span>
+                  </div>
                 </div>
-            </div>
 
-            {/* Card 2: Memory */}
-            <div 
-                onClick={() => setActiveGame('MEMORY')}
-                className="group relative w-64 h-80 bg-slate-800 rounded-2xl border-4 border-slate-700 hover:border-cyan-500 cursor-pointer transition-all duration-300 transform hover:-translate-y-2 hover:shadow-[0_0_30px_rgba(6,182,212,0.3)] snap-center shrink-0 overflow-hidden"
-            >
-                 <div className="absolute inset-0 bg-cyan-500/10 group-hover:bg-cyan-500/20 transition-colors"></div>
-                 <div className="absolute top-4 right-4 bg-cyan-900 text-cyan-300 text-[10px] font-bold px-2 py-1 rounded border border-cyan-700">NEW</div>
-
-                 <div className="h-1/2 flex items-center justify-center text-cyan-500">
-                    <Grid size={64} className="group-hover:rotate-90 transition-transform duration-500" />
+                <div className="pt-4 border-t border-slate-100 flex justify-between items-center text-xs font-bold text-amber-600">
+                  <span className="flex items-center gap-1.5">
+                    <Play size={14} fill="currentColor" /> Launch Manipulative
+                  </span>
+                  <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
                 </div>
-                
-                <div className="p-4 bg-slate-900/90 h-1/2 border-t-2 border-slate-700 group-hover:border-cyan-500 transition-colors">
-                    <h3 className="text-xl font-bold text-white mb-1">MOLECULAR MEMORY</h3>
-                    <p className="text-xs text-slate-400 mb-4 h-8">Match chemical formulas to their names.</p>
-                    <div className="flex items-center gap-2 text-[10px] text-slate-500 font-mono">
-                        <Timer size={12} /> Speed Challenge
+              </div>
+            )}
+
+            {/* Game 2: Circuit Master */}
+            {(selectedCategory === 'ALL' || selectedCategory === 'PHYSICS') && (
+              <div 
+                onClick={() => {
+                  sounds.playClick();
+                  setCurrentView('CIRCUIT_MASTER');
+                }}
+                className="bg-white rounded-3xl border border-slate-200 hover:border-cyan-400 hover:shadow-2xl transition-all duration-300 p-6 flex flex-col justify-between cursor-pointer group"
+              >
+                <div>
+                  <div className="flex justify-between items-start mb-4">
+                    <span className="text-[10px] font-black uppercase tracking-wider bg-cyan-100 text-cyan-800 px-3 py-1 rounded-full">
+                      NCERT Class 10 Ch 12 • Electricity & Ohm's Law
+                    </span>
+                    <span className="text-xs font-bold text-cyan-600 bg-cyan-50 px-2 py-0.5 rounded-md">
+                      ★★★ Advanced • +35 XP
+                    </span>
+                  </div>
+
+                  <h3 className="font-black text-xl text-slate-900 group-hover:text-cyan-600 transition-colors">
+                    Circuit Master: Power the Grid
+                  </h3>
+                  <p className="text-xs text-slate-500 leading-relaxed mt-1">
+                    Calculate battery voltage and resistor load using Ohm's Law (V = IR) to deliver exact target amperes without blowing the fuse.
+                  </p>
+
+                  {/* Interactive Miniature Circuit Preview */}
+                  <div className="my-5 p-4 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-between px-6 group-hover:border-cyan-500/50 transition-colors">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-lg bg-cyan-950 border border-cyan-500 flex items-center justify-center text-cyan-300 font-mono text-xs font-bold">
+                        12V
+                      </div>
+                      <div className="w-12 h-0.5 bg-cyan-400 border-b border-dashed border-cyan-300 animate-pulse"></div>
+                      <div className="w-8 h-8 rounded-lg bg-amber-950 border border-amber-500 flex items-center justify-center text-amber-300 font-mono text-xs font-bold">
+                        6Ω
+                      </div>
                     </div>
-                    <button className="mt-4 w-full py-2 bg-cyan-600 text-white font-bold text-xs rounded uppercase tracking-wider group-hover:bg-cyan-500">
-                        Insert Coin
-                    </button>
+                    <div className="text-right font-mono">
+                      <div className="text-[10px] text-slate-400">DELIVERED</div>
+                      <div className="text-base font-black text-emerald-400">2.00 A</div>
+                    </div>
+                  </div>
                 </div>
-            </div>
 
-            {/* Card 3: Coming Soon */}
-            <div className="group relative w-64 h-80 bg-slate-800/50 rounded-2xl border-4 border-dashed border-slate-700 cursor-not-allowed snap-center shrink-0 opacity-60">
-                <div className="h-full flex flex-col items-center justify-center text-slate-500">
-                    <Brain size={48} className="mb-4 opacity-50" />
-                    <h3 className="font-bold text-lg">QUIZ RUSH</h3>
-                    <p className="text-xs uppercase tracking-widest mt-2">Coming Soon</p>
+                <div className="pt-4 border-t border-slate-100 flex justify-between items-center text-xs font-bold text-cyan-600">
+                  <span className="flex items-center gap-1.5">
+                    <Play size={14} fill="currentColor" /> Launch Circuit Workbench
+                  </span>
+                  <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
                 </div>
-            </div>
+              </div>
+            )}
 
-        </div>
+            {/* Game 3: Optics Ray Maze */}
+            {(selectedCategory === 'ALL' || selectedCategory === 'PHYSICS') && (
+              <div 
+                onClick={() => {
+                  sounds.playClick();
+                  setCurrentView('OPTICS_MAZE');
+                }}
+                className="bg-white rounded-3xl border border-slate-200 hover:border-emerald-400 hover:shadow-2xl transition-all duration-300 p-6 flex flex-col justify-between cursor-pointer group"
+              >
+                <div>
+                  <div className="flex justify-between items-start mb-4">
+                    <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full">
+                      NCERT Class 10 Ch 10 • Reflection & Snell's Law
+                    </span>
+                    <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">
+                      ★★★ Spatial Mechanics • +40 XP
+                    </span>
+                  </div>
 
-        <div className="relative z-10 text-center pb-4 text-[10px] text-slate-500 font-mono">
-            EARN XP • UNLOCK SKINS • CLIMB LEADERBOARD
-        </div>
+                  <h3 className="font-black text-xl text-slate-900 group-hover:text-emerald-600 transition-colors">
+                    Optics Ray & Reflection Maze
+                  </h3>
+                  <p className="text-xs text-slate-500 leading-relaxed mt-1">
+                    Rotate plane and spherical optical mirrors to guide an incoming laser beam onto target photoelectric sensors using angle laws (∠i = ∠r).
+                  </p>
+
+                  {/* Interactive Miniature Ray Preview */}
+                  <div className="my-5 p-4 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-center relative overflow-hidden group-hover:border-emerald-500/50 transition-colors">
+                    <div className="w-full h-10 flex items-center justify-around">
+                      <span className="text-[10px] text-red-400 font-mono font-bold">LASER ➔</span>
+                      <div className="w-1 h-8 bg-cyan-400 rotate-45 rounded-full shadow-[0_0_8px_#38bdf8]"></div>
+                      <span className="text-[10px] text-emerald-400 font-mono font-bold">➔ SENSOR [45°]</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-slate-100 flex justify-between items-center text-xs font-bold text-emerald-600">
+                  <span className="flex items-center gap-1.5">
+                    <Play size={14} fill="currentColor" /> Launch Optics Maze
+                  </span>
+                  <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                </div>
+              </div>
+            )}
+
+            {/* Game 4: Elemental Speed Rush */}
+            {(selectedCategory === 'ALL' || selectedCategory === 'DRILL' || selectedCategory === 'CHEMISTRY') && (
+              <div 
+                onClick={() => {
+                  sounds.playClick();
+                  setCurrentView('ELEMENT_RUSH');
+                }}
+                className="bg-white rounded-3xl border border-slate-200 hover:border-purple-400 hover:shadow-2xl transition-all duration-300 p-6 flex flex-col justify-between cursor-pointer group"
+              >
+                <div>
+                  <div className="flex justify-between items-start mb-4">
+                    <span className="text-[10px] font-black uppercase tracking-wider bg-purple-100 text-purple-800 px-3 py-1 rounded-full">
+                      NCERT Class 10 Ch 5 • Periodic Classification
+                    </span>
+                    <span className="text-xs font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-md">
+                      ★★☆ Speed Drill • +25 XP
+                    </span>
+                  </div>
+
+                  <h3 className="font-black text-xl text-slate-900 group-hover:text-purple-600 transition-colors">
+                    Elemental Speed Rush
+                  </h3>
+                  <p className="text-xs text-slate-500 leading-relaxed mt-1">
+                    Fast-paced periodic table sorting drill! Classify metals, non-metals, and noble gases under 30 seconds for combo streaks and multiplier bonuses.
+                  </p>
+
+                  {/* Interactive Periodic Card Preview */}
+                  <div className="my-5 p-4 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-around group-hover:border-purple-500/50 transition-colors">
+                    <div className="w-12 h-14 bg-amber-950/70 border border-amber-500/50 rounded-xl flex flex-col items-center justify-center">
+                      <span className="text-[8px] text-amber-300 font-mono">11</span>
+                      <span className="text-sm font-black text-amber-400 font-mono">Na</span>
+                    </div>
+                    <div className="w-12 h-14 bg-cyan-950/70 border border-cyan-500/50 rounded-xl flex flex-col items-center justify-center">
+                      <span className="text-[8px] text-cyan-300 font-mono">17</span>
+                      <span className="text-sm font-black text-cyan-400 font-mono">Cl</span>
+                    </div>
+                    <div className="w-12 h-14 bg-purple-950/70 border border-purple-500/50 rounded-xl flex flex-col items-center justify-center">
+                      <span className="text-[8px] text-purple-300 font-mono">10</span>
+                      <span className="text-sm font-black text-purple-400 font-mono">Ne</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-slate-100 flex justify-between items-center text-xs font-bold text-purple-600">
+                  <span className="flex items-center gap-1.5">
+                    <Play size={14} fill="currentColor" /> Launch Speed Drill
+                  </span>
+                  <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                </div>
+              </div>
+            )}
+
+          </div>
+        </>
+      )}
+
+      {currentView === 'BALANCE_BEAM' && <BalanceBeamGame onBack={() => setCurrentView('HUB')} />}
+      {currentView === 'CIRCUIT_MASTER' && <CircuitMasterGame onBack={() => setCurrentView('HUB')} />}
+      {currentView === 'ELEMENT_RUSH' && <ElementRushGame onBack={() => setCurrentView('HUB')} />}
+      {currentView === 'OPTICS_MAZE' && <OpticsMazeGame onBack={() => setCurrentView('HUB')} />}
+
     </div>
   );
 };
