@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { StudentProvider } from './context/StudentContext';
 import { LandingPage } from './pages/LandingPage';
+import { LoginPage } from './pages/LoginPage';
+import { LaunchAnimation } from './components/LaunchAnimation';
 import { Dashboard } from './pages/Dashboard';
 import { LearningSession } from './pages/LearningSession';
 import { QuizSession } from './pages/QuizSession';
@@ -10,14 +12,21 @@ import { UserRole, Quiz } from './types';
 import { QUIZZES } from './data/curriculum';
 
 const AppContent: React.FC = () => {
-  const [view, setView] = useState<'landing' | 'dashboard' | 'session' | 'quiz'>('landing');
+  const [showLaunch, setShowLaunch] = useState(true);
+  const [view, setView] = useState<'landing' | 'login' | 'dashboard' | 'session' | 'quiz'>('landing');
   const [userRole, setUserRole] = useState<UserRole>('student');
+  const [loginDefaultRole, setLoginDefaultRole] = useState<UserRole>('student');
   const [activeConcept, setActiveConcept] = useState<string | null>(null);
   const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(null);
 
   const handleLogin = (role: UserRole) => {
     setUserRole(role);
     setView('dashboard');
+  };
+
+  const handleOpenLogin = (role: UserRole = 'student') => {
+    setLoginDefaultRole(role);
+    setView('login');
   };
   
   const handleLogout = () => {
@@ -41,9 +50,24 @@ const AppContent: React.FC = () => {
     setView('dashboard');
   };
 
+  // Launch Animation Overlay
+  if (showLaunch) {
+    return <LaunchAnimation onComplete={() => setShowLaunch(false)} />;
+  }
+
   // Render Logic based on Role and View
   if (view === 'landing') {
-    return <LandingPage onLogin={handleLogin} />;
+    return <LandingPage onLogin={handleLogin} onOpenLogin={handleOpenLogin} />;
+  }
+
+  if (view === 'login') {
+    return (
+      <LoginPage 
+        onLogin={handleLogin} 
+        onBack={() => setView('landing')} 
+        defaultRole={loginDefaultRole} 
+      />
+    );
   }
 
   if (view === 'dashboard') {

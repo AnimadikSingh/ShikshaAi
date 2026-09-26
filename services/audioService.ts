@@ -151,6 +151,14 @@ class SoundService {
       osc.stop(now + t + d);
     });
   }
+
+  public playCelebration() {
+    this.playVictory();
+  }
+
+  public playSuccess() {
+    this.playCorrect();
+  }
 }
 
 export const sounds = new SoundService();

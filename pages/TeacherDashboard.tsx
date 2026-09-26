@@ -88,7 +88,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ onBack }) =>
       let totalScore = 0;
       let count = 0;
       classStudents.forEach(s => {
-          Object.values(s.masteryMap).forEach(v => {
+          (Object.values(s.masteryMap) as number[]).forEach(v => {
               totalScore += v;
               count++;
           });

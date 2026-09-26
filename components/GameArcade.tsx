@@ -693,7 +693,7 @@ const OpticsMazeGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 // =========================================================================
 // MAIN KNOWLEDGE ARCADE HUB
 // =========================================================================
-export const GameArcade: React.FC = () => {
+export const GameArcade: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   const { digitalTwin } = useStudent();
   const [currentView, setCurrentView] = useState<ArcadeView>('HUB');
   const [selectedCategory, setSelectedCategory] = useState<'ALL' | 'CHEMISTRY' | 'PHYSICS' | 'DRILL'>('ALL');
@@ -704,35 +704,135 @@ export const GameArcade: React.FC = () => {
       
       {currentView === 'HUB' && (
         <>
-          {/* Master Arcade Telemetry Banner */}
-          <div className="bg-slate-900 text-white rounded-3xl p-6 border border-slate-800 shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-              <div className="flex items-center gap-2 text-amber-400 text-xs font-bold uppercase tracking-wider mb-1">
-                <Gamepad2 size={16} /> Interactive STEM Manipulatives & Quests
+          {/* Top Header matching Screen 5 in media_1790433716001.jpg */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              {onBack && (
+                <button 
+                  onClick={onBack}
+                  className="p-1.5 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-colors"
+                >
+                  <ArrowLeft size={18} />
+                </button>
+              )}
+              <div>
+                <h2 className="text-xl font-extrabold text-slate-900">Knowledge Arcade</h2>
+                <p className="text-xs text-slate-400">Practice with interactive challenges, puzzles and workbenches.</p>
               </div>
-              <h2 className="text-2xl font-black tracking-tight">
-                Knowledge Arcade: Interactive Concept Sandbox
-              </h2>
-              <p className="text-slate-400 text-xs mt-1">
-                Hands-on stoichiometric balance scales, power grid circuit puzzles, optics ray mazes, and periodic speed challenges.
-              </p>
+            </div>
+          </div>
+
+          {/* Mode Tabs matching Screen 5 */}
+          <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar">
+            {[
+              { id: 'ALL', label: 'All' },
+              { id: 'CHEMISTRY', label: 'Chemical Manipulatives' },
+              { id: 'PHYSICS', label: 'Physics Workbenches' },
+              { id: 'PUZZLES', label: 'Spatial Puzzles' },
+              { id: 'DRILL', label: 'Speed Drills' }
+            ].map(tab => {
+              const isSelected = (tab.id === 'CHEMISTRY' && selectedCategory === 'CHEMISTRY') || (tab.id === 'ALL' && selectedCategory === 'ALL');
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => {
+                    sounds.playClick();
+                    setSelectedCategory(tab.id === 'PUZZLES' ? 'PHYSICS' : tab.id as any);
+                  }}
+                  className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap ${
+                    isSelected 
+                      ? 'bg-[#0f172a] text-white shadow-xs' 
+                      : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/80'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Featured Screen 5 Card: Reaction Balance Beam with brass scale photo */}
+          <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+            
+            {/* Left 8 Cols: Realistic Brass Scale Container */}
+            <div className="lg:col-span-8 bg-slate-950 rounded-2xl overflow-hidden relative border border-slate-200 shadow-sm flex flex-col justify-between min-h-[340px]">
+              {/* Scale Background photo */}
+              <img 
+                src="/images/balance_scale.jpg" 
+                alt="Reaction Balance Beam Scale" 
+                className="absolute inset-0 w-full h-full object-cover opacity-85"
+              />
+              
+              <div className="relative z-10 p-4 bg-slate-950/60 backdrop-blur-xs flex justify-between items-center text-white">
+                <div>
+                  <h3 className="font-extrabold text-sm text-white">Reaction Balance Beam</h3>
+                  <p className="text-[10px] text-slate-300">Balance the chemical equation by placing correct coefficients.</p>
+                </div>
+                <span className="text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-md">
+                  Stoichiometry
+                </span>
+              </div>
+
+              {/* Chemical Equation Bar at bottom of scale */}
+              <div className="relative z-10 p-3 bg-slate-950/80 backdrop-blur-md border-t border-white/10 flex justify-center items-center">
+                <div className="text-base md:text-lg font-mono font-black text-white tracking-wider">
+                  <span className="text-amber-400">2</span>H₂ + <span className="text-cyan-400">1</span>O₂ ➔ <span className="text-emerald-400">2</span>H₂O
+                </div>
+              </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <div className="bg-amber-950/60 border border-amber-500/40 px-3.5 py-1.5 rounded-xl text-xs font-bold text-amber-400 flex items-center gap-1.5">
-                <Star size={16} fill="currentColor" /> 22/28 Stars Earned
+            {/* Right 4 Cols: "Your Task" matching Screen 5 */}
+            <div className="lg:col-span-4 bg-slate-50 border border-slate-200/80 rounded-2xl p-5 space-y-4">
+              <div>
+                <h4 className="font-extrabold text-sm text-slate-900">Your Task</h4>
+                <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                  Adjust the coefficient blocks to balance both sides of the reaction.
+                </p>
               </div>
-              <div className="bg-indigo-950/60 border border-indigo-500/40 px-3.5 py-1.5 rounded-xl text-xs font-bold text-indigo-400 flex items-center gap-1.5">
-                <Flame size={16} /> 1.5x XP Boost
+
+              <div className="space-y-3 pt-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-bold text-slate-700">H₂ (Reactant):</span>
+                  <div className="flex items-center gap-2 bg-white border border-slate-200 px-2 py-1 rounded-xl">
+                    <button className="text-slate-400 font-bold px-1.5 hover:text-slate-700">−</button>
+                    <span className="font-mono font-bold text-slate-900">2</span>
+                    <button className="text-slate-400 font-bold px-1.5 hover:text-slate-700">+</button>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-bold text-slate-700">O₂ (Reactant):</span>
+                  <div className="flex items-center gap-2 bg-white border border-slate-200 px-2 py-1 rounded-xl">
+                    <button className="text-slate-400 font-bold px-1.5 hover:text-slate-700">−</button>
+                    <span className="font-mono font-bold text-slate-900">1</span>
+                    <button className="text-slate-400 font-bold px-1.5 hover:text-slate-700">+</button>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-bold text-slate-700">H₂O (Product):</span>
+                  <div className="flex items-center gap-2 bg-white border border-slate-200 px-2 py-1 rounded-xl">
+                    <button className="text-slate-400 font-bold px-1.5 hover:text-slate-700">−</button>
+                    <span className="font-mono font-bold text-slate-900">2</span>
+                    <button className="text-slate-400 font-bold px-1.5 hover:text-slate-700">+</button>
+                  </div>
+                </div>
               </div>
-              <button
-                onClick={() => setSoundEnabled(sounds.toggleSound())}
-                className="p-2.5 rounded-xl bg-slate-800 text-slate-400 hover:text-white border border-slate-700 transition-colors"
-                title="Toggle Sound Effects"
-              >
-                {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
-              </button>
+
+              <div className="pt-2 flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    sounds.playClick();
+                    setCurrentView('BALANCE_BEAM');
+                  }}
+                  className="w-full py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold shadow-xs transition-all flex items-center justify-center gap-1.5"
+                >
+                  <Scale size={14} />
+                  <span>Check Balance</span>
+                </button>
+              </div>
             </div>
+
           </div>
 
           {/* Category Filter Pills */}

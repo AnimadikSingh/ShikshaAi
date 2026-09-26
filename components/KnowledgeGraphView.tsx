@@ -543,7 +543,7 @@ const BASE_EDGES: WebEdge[] = [
   }
 ];
 
-export const KnowledgeGraphView: React.FC = () => {
+export const KnowledgeGraphView: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   const { digitalTwin, markAsStarted } = useStudent();
   
   // Navigation & filtering state
@@ -714,44 +714,58 @@ export const KnowledgeGraphView: React.FC = () => {
   }, [selectedSubject]);
 
   return (
-    <div className="w-full max-w-7xl mx-auto space-y-6 animate-[fadeIn_0.5s_ease-out]">
+    <div className="w-full max-w-7xl mx-auto space-y-5 animate-[fadeIn_0.3s_ease-out]">
       
-      {/* Top Header & Context Bar */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/90 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <div className="flex items-center gap-2 text-indigo-600 text-xs font-bold uppercase tracking-wider mb-1">
-            <Network size={16} /> Interactive Living Knowledge Network
+      {/* Top Header matching Screen 3 in media_1790433716001.jpg */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          {onBack && (
+            <button 
+              onClick={onBack}
+              className="p-1.5 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-colors"
+            >
+              <ArrowRight size={18} className="rotate-180" />
+            </button>
+          )}
+          <div>
+            <h2 className="text-xl font-extrabold text-slate-900">Brain Web</h2>
+            <p className="text-xs text-slate-400">See how concepts connect across chapters with an interactive visual map.</p>
           </div>
-          <h2 className="text-2xl font-black text-slate-900 tracking-tight">
-            Brain Web: Dynamic Curriculum Graph
-          </h2>
-          <p className="text-slate-500 text-xs mt-1">
-            Explore how concepts branch, interconnect, and unlock across NCERT Class 10 Chemistry, Physics, and Biology.
-          </p>
         </div>
 
-        {/* View Mode Switcher */}
-        <div className="flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
-          {[
-            { id: 'GRAPH', label: 'Living Neural Web', icon: Network },
-            { id: 'ROADMAP', label: '3-Stage Roadmap', icon: Layers },
-            { id: 'BRIDGES', label: 'Cross-Subject Synapses', icon: Share2 }
-          ].map(tab => (
+        {/* Mode Pills & Subject Dropdown matching Screen 3 */}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 bg-white border border-slate-200 p-1 rounded-full shadow-2xs">
             <button
-              key={tab.id}
-              onClick={() => {
-                sounds.playClick();
-                setActiveTab(tab.id as any);
-              }}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                activeTab === tab.id 
-                  ? 'bg-white text-slate-900 shadow-sm' 
-                  : 'text-slate-500 hover:text-slate-900'
+              onClick={() => setActiveTab('GRAPH')}
+              className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
+                activeTab === 'GRAPH' ? 'bg-[#0f172a] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <tab.icon size={14} /> {tab.label}
+              ◉ Full View
             </button>
-          ))}
+            <button
+              onClick={() => setActiveTab('ROADMAP')}
+              className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
+                activeTab === 'ROADMAP' ? 'bg-[#0f172a] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Chapter View
+            </button>
+            <button
+              onClick={() => setActiveTab('BRIDGES')}
+              className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
+                activeTab === 'BRIDGES' ? 'bg-[#0f172a] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Cross-Subject
+            </button>
+          </div>
+
+          <div className="flex items-center gap-1.5 bg-white border border-slate-200 px-3 py-1.5 rounded-full text-xs font-bold text-slate-700 shadow-2xs cursor-pointer">
+            <span>{selectedSubject === 'All' ? 'Chemistry' : selectedSubject}</span>
+            <ChevronDown size={14} className="text-slate-400" />
+          </div>
         </div>
       </div>
 
@@ -1171,11 +1185,12 @@ export const KnowledgeGraphView: React.FC = () => {
                 onClick={() => {
                   sounds.playVictory();
                   markAsStarted(activeNode.id);
-                  alert(`Navigating to interactive lesson for: ${activeNode.label}`);
+                  alert(`Opening 3D interactive model for: ${activeNode.label}`);
                 }}
-                className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-md transition-all flex items-center justify-center gap-2"
+                className="w-full py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold shadow-xs transition-all flex items-center justify-center gap-1.5"
               >
-                <Zap size={14} fill="currentColor" /> Study Concept Module
+                <span>View in 3D</span>
+                <ArrowRight size={14} />
               </button>
               <div className="flex justify-between text-[11px] text-slate-400 px-1 pt-1">
                 <span>Click & drag canvas to pan</span>

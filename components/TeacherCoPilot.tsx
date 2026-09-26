@@ -22,7 +22,8 @@ export const TeacherCoPilot: React.FC<TeacherCoPilotProps> = ({ students, curric
 
   // 1. Identify Struggling Students
   const strugglingStudents = students.filter(s => {
-      const avgMastery = Object.values(s.masteryMap).reduce((a, b) => a + b, 0) / Math.max(1, Object.values(s.masteryMap).length);
+      const vals = Object.values(s.masteryMap) as number[];
+      const avgMastery = vals.reduce((a, b) => a + b, 0) / Math.max(1, vals.length);
       return avgMastery < 0.6 || s.confusionPoints.length > 0;
   });
 

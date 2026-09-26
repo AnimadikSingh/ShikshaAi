@@ -119,7 +119,7 @@ const EXTENDED_FLASHCARDS: DetailedFlashcard[] = [
   }
 ];
 
-export const FlashcardsView: React.FC = () => {
+export const FlashcardsView: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   const { digitalTwin, addXP } = useStudent();
   const [cards, setCards] = useState<DetailedFlashcard[]>(EXTENDED_FLASHCARDS);
   const [filterSubject, setFilterSubject] = useState<'All' | 'Chemistry' | 'Physics' | 'Biology'>('All');
@@ -241,69 +241,53 @@ export const FlashcardsView: React.FC = () => {
   const learningCount = cards.filter(c => c.box === 1).length;
 
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-6 animate-[fadeIn_0.5s_ease-out]">
+    <div className="w-full max-w-4xl mx-auto space-y-5 animate-[fadeIn_0.3s_ease-out]">
       
-      {/* Top Banner & Leitner Box Stats */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <div className="flex items-center gap-2 text-indigo-600 text-xs font-bold uppercase tracking-wider mb-1">
-            <Brain size={16} /> Spaced Repetition Mastery Engine (Anki / Leitner Algorithm)
+      {/* Top Header matching Screen 6 in media_1790433716001.jpg */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          {onBack && (
+            <button 
+              onClick={onBack}
+              className="p-1.5 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-colors"
+            >
+              <ArrowLeft size={18} />
+            </button>
+          )}
+          <div>
+            <h2 className="text-xl font-extrabold text-slate-900">Scientific Flashcards</h2>
+            <p className="text-xs text-slate-400">Quickly revise key concepts with spaced repetition.</p>
           </div>
-          <h2 className="text-2xl font-black text-slate-900 tracking-tight">
-            Scientific Active Recall Flashcards
-          </h2>
-          <p className="text-slate-500 text-xs mt-1">
-            Review key definitions, chemical equations, and examiner traps with scientifically scheduled intervals.
-          </p>
-        </div>
-
-        {/* 3-Box Leitner Visual Bar */}
-        <div className="flex items-center gap-2 bg-slate-50 p-2 rounded-2xl border border-slate-100">
-          <button 
-            onClick={() => setFilterBox(filterBox === 1 ? 'All' : 1)}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${filterBox === 1 ? 'bg-red-500 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-200'}`}
-          >
-            Box 1: {learningCount} (Learn)
-          </button>
-          <button 
-            onClick={() => setFilterBox(filterBox === 2 ? 'All' : 2)}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${filterBox === 2 ? 'bg-amber-500 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-200'}`}
-          >
-            Box 2: {reviewCount} (Review)
-          </button>
-          <button 
-            onClick={() => setFilterBox(filterBox === 3 ? 'All' : 3)}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${filterBox === 3 ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-200'}`}
-          >
-            Box 3: {masteredCount} (Mastered)
-          </button>
         </div>
       </div>
 
-      {/* Filter and Subject Selector */}
-      <div className="flex justify-between items-center bg-white p-3.5 rounded-2xl border border-slate-200">
-        <div className="flex gap-2">
-          {['All', 'Chemistry', 'Physics', 'Biology'].map(sub => (
-            <button
-              key={sub}
-              onClick={() => {
-                sounds.playClick();
-                setFilterSubject(sub as any);
-              }}
-              className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                filterSubject === sub 
-                  ? 'bg-slate-900 text-white shadow-sm' 
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              {sub}
-            </button>
-          ))}
+      {/* Mode Tabs matching Screen 6: All | Chemistry (Active) | Physics | Biology | Spaced Repetition ▾ */}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-2">
+          {['All', 'Chemistry', 'Physics', 'Biology'].map(sub => {
+            const isSelected = (sub === 'Chemistry' && filterSubject === 'Chemistry') || (sub === 'All' && filterSubject === 'All');
+            return (
+              <button
+                key={sub}
+                onClick={() => {
+                  sounds.playClick();
+                  setFilterSubject(sub as any);
+                }}
+                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
+                  isSelected 
+                    ? 'bg-[#0f172a] text-white shadow-xs' 
+                    : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/80'
+                }`}
+              >
+                {sub}
+              </button>
+            );
+          })}
         </div>
 
-        <div className="text-xs font-bold text-slate-500 flex items-center gap-2">
-          <Award size={16} className="text-indigo-600" />
-          <span>Reviewed Today: <strong className="text-slate-900">{reviewedToday}</strong></span>
+        <div className="flex items-center gap-1.5 bg-white border border-slate-200 px-3 py-1.5 rounded-full text-xs font-bold text-slate-700 shadow-2xs">
+          <span>Spaced Repetition</span>
+          <span className="text-slate-400">▾</span>
         </div>
       </div>
 
@@ -449,36 +433,37 @@ export const FlashcardsView: React.FC = () => {
         </div>
       )}
 
-      {/* Anki Review Rating Buttons (Visible when flipped) */}
+      {/* Spaced Repetition Rating Buttons (Visible when flipped) */}
       {isFlipped && (
-        <div className="grid grid-cols-4 gap-3 animate-[fadeIn_0.3s_ease-out]">
+        <div className="grid grid-cols-3 gap-4 animate-[fadeIn_0.3s_ease-out]">
           <button
             onClick={() => handleRate('AGAIN')}
-            className="p-3.5 bg-red-50 hover:bg-red-100 border border-red-200 rounded-2xl text-center text-red-700 transition-all hover:scale-105"
+            className="p-4 bg-rose-50 hover:bg-rose-100 border-2 border-rose-200 hover:border-rose-300 rounded-2xl text-center text-rose-700 transition-all hover:scale-[1.02] shadow-sm flex flex-col items-center justify-center gap-1 group"
           >
-            <div className="text-xs font-black">1. AGAIN</div>
-            <div className="text-[10px] opacity-75">&lt; 1 min (Box 1)</div>
+            <div className="text-sm font-black flex items-center gap-1.5">
+              <span>✕</span> I Forgot
+            </div>
+            <div className="text-[11px] text-rose-500 font-medium">Reset to Box 1 • Review soon</div>
           </button>
+          
           <button
             onClick={() => handleRate('HARD')}
-            className="p-3.5 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-2xl text-center text-amber-800 transition-all hover:scale-105"
+            className="p-4 bg-amber-50 hover:bg-amber-100 border-2 border-amber-200 hover:border-amber-300 rounded-2xl text-center text-amber-800 transition-all hover:scale-[1.02] shadow-sm flex flex-col items-center justify-center gap-1 group"
           >
-            <div className="text-xs font-black">2. HARD</div>
-            <div className="text-[10px] opacity-75">10 mins</div>
+            <div className="text-sm font-black flex items-center gap-1.5">
+              <span>⚡</span> Partially Correct
+            </div>
+            <div className="text-[11px] text-amber-600 font-medium">Keep in Box 2 • Review tomorrow</div>
           </button>
-          <button
-            onClick={() => handleRate('GOOD')}
-            className="p-3.5 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-2xl text-center text-blue-700 transition-all hover:scale-105"
-          >
-            <div className="text-xs font-black">3. GOOD</div>
-            <div className="text-[10px] opacity-75">1 day (Box +1)</div>
-          </button>
+
           <button
             onClick={() => handleRate('EASY')}
-            className="p-3.5 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-2xl text-center text-emerald-700 transition-all hover:scale-105 shadow-sm"
+            className="p-4 bg-emerald-50 hover:bg-emerald-100 border-2 border-emerald-200 hover:border-emerald-300 rounded-2xl text-center text-emerald-800 transition-all hover:scale-[1.02] shadow-sm flex flex-col items-center justify-center gap-1 group"
           >
-            <div className="text-xs font-black">4. EASY</div>
-            <div className="text-[10px] opacity-75">Mastered! (+20 XP)</div>
+            <div className="text-sm font-black flex items-center gap-1.5">
+              <span>✓</span> I Knew It!
+            </div>
+            <div className="text-[11px] text-emerald-600 font-medium">Move to Box 3 • +20 XP</div>
           </button>
         </div>
       )}
