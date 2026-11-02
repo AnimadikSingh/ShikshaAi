@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { 
   GraduationCap, Users, BarChart3, ArrowRight, Play, 
   X, BookOpen, FlaskConical, Sprout, FileText, ChevronDown,
-  ArrowLeft, CheckCircle2, Sparkles, Compass, ShieldCheck
+  ArrowLeft, Sparkles
 } from 'lucide-react';
 import { UserRole } from '../types';
 import { sounds } from '../services/audioService';
@@ -16,21 +16,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
   const [showOverviewModal, setShowOverviewModal] = useState(false);
   const [activePortalIndex, setActivePortalIndex] = useState(0);
   const [activeTopic, setActiveTopic] = useState<string | null>(null);
-  const heroRef = useRef<HTMLDivElement>(null);
-  const [mouseOffset, setMouseOffset] = useState({ x: 0, y: 0 });
-
-  // Handle subtle 3D mouse parallax on hero
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!heroRef.current) return;
-    const rect = heroRef.current.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width - 0.5) * 6;
-    const y = ((e.clientY - rect.top) / rect.height - 0.5) * -6;
-    setMouseOffset({ x, y });
-  };
-
-  const handleMouseLeave = () => {
-    setMouseOffset({ x: 0, y: 0 });
-  };
 
   const portals = [
     {
@@ -39,11 +24,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
       description: 'Access NCERT lessons, 3D virtual labs, adaptive quizzes and your personalized learning path.',
       tags: ['Learn', 'Practice', 'Explore', 'Track'],
       icon: GraduationCap,
-      accentBg: 'bg-blue-50/90',
+      accentBg: 'bg-blue-50',
       accentBorder: 'border-blue-100',
       iconColor: 'text-blue-600',
+      cardBg: 'bg-gradient-to-br from-white via-blue-50/20 to-blue-50/50',
+      cardBorder: 'border-blue-100/80',
       buttonBg: 'bg-blue-600 hover:bg-blue-700 text-white',
-      badgeGradient: 'from-blue-500/12 to-transparent',
     },
     {
       id: 'teacher' as UserRole,
@@ -51,11 +37,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
       description: 'Real-time classroom insights, concept heatmaps, automated worksheets and AI-powered lesson planning.',
       tags: ['Analytics', 'Lesson Plans', 'Worksheets', 'AI Tools'],
       icon: Users,
-      accentBg: 'bg-emerald-50/90',
+      accentBg: 'bg-emerald-50',
       accentBorder: 'border-emerald-100',
       iconColor: 'text-emerald-600',
-      buttonBg: 'bg-[#22c55e] hover:bg-[#16a34a] text-white',
-      badgeGradient: 'from-emerald-500/12 to-transparent',
+      cardBg: 'bg-gradient-to-br from-white via-emerald-50/20 to-emerald-50/50',
+      cardBorder: 'border-emerald-100/80',
+      buttonBg: 'bg-emerald-500 hover:bg-emerald-600 text-white',
     },
     {
       id: 'official' as UserRole,
@@ -63,11 +50,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
       description: 'NITI Aayog aligned education benchmarks, learning gap heatmaps and resource audit telemetry.',
       tags: ['Reports', 'Equity Metrics', 'Gap Analysis', 'Planning'],
       icon: BarChart3,
-      accentBg: 'bg-amber-50/90',
+      accentBg: 'bg-amber-50',
       accentBorder: 'border-amber-100',
       iconColor: 'text-amber-600',
-      buttonBg: 'bg-[#f59e0b] hover:bg-[#d97706] text-white',
-      badgeGradient: 'from-amber-500/12 to-transparent',
+      cardBg: 'bg-gradient-to-br from-white via-amber-50/20 to-amber-50/50',
+      cardBorder: 'border-amber-100/80',
+      buttonBg: 'bg-amber-500 hover:bg-amber-600 text-white',
     },
   ];
 
@@ -88,13 +76,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
   };
 
   return (
-    <div className="min-h-screen bg-[#f7f9fc] text-slate-900 font-sans selection:bg-[#ccff00] selection:text-black relative overflow-x-hidden">
+    <div className="min-h-screen bg-white text-slate-900 font-sans selection:bg-[#ccff00] selection:text-black">
       
       {/* ============================================================== */}
-      {/* 1. TOP NAVIGATION HEADER (MATCHING SCREENSHOT 1)               */}
+      {/* 1. TOP NAVIGATION HEADER                                       */}
       {/* ============================================================== */}
-      <header className="w-full bg-white/95 backdrop-blur-md sticky top-0 z-50 border-b border-slate-200/70 shadow-2xs">
-        <div className="max-w-[1440px] mx-auto px-6 sm:px-10 lg:px-12 py-3.5 flex items-center justify-between">
+      <header className="w-full bg-white sticky top-0 z-50 border-b border-slate-100">
+        <div className="max-w-[1240px] mx-auto px-6 sm:px-8 py-3.5 flex items-center justify-between">
           
           {/* Left Brand Logo */}
           <div 
@@ -104,7 +92,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
             }}
             className="flex items-center gap-3 cursor-pointer select-none group"
           >
-            <div className="w-10 h-10 rounded-xl bg-[#ccff00] flex items-center justify-center font-black text-black text-base shadow-xs group-hover:scale-105 transition-transform">
+            <div className="w-9 h-9 rounded-xl bg-[#ccff00] flex items-center justify-center font-black text-black text-sm shadow-xs group-hover:scale-105 transition-transform">
               SA
             </div>
             <span className="text-xl font-extrabold text-slate-900 tracking-tight">
@@ -168,39 +156,24 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
       </header>
 
       {/* ============================================================== */}
-      {/* 2. MAIN HERO SECTION (EXACT REPLICA OF 1ST REFERENCE IMAGE)    */}
-      {/* With true cloud depth behind SHIKSHA, visible Mind & boy       */}
+      {/* 2. FULL-BLEED HERO SECTION (PIXEL-PERFECT REPLICA OF IMAGE 3)  */}
+      {/* Edge-to-edge panoramic canvas with natural cloud depth         */}
       {/* ============================================================== */}
-      <section 
-        ref={heroRef}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-        className="relative w-full max-w-[1440px] mx-auto pt-2 pb-6 px-4 sm:px-6 lg:px-8 select-none"
-        style={{ perspective: '1400px' }}
-      >
-        {/* Dynamic 3D Parallax Canvas Wrapper */}
-        <div 
-          className="relative w-full rounded-2xl sm:rounded-3xl overflow-hidden shadow-[0_15px_40px_rgba(0,0,0,0.08)] transition-transform duration-300 ease-out"
-          style={{
-            transform: `rotateX(${mouseOffset.y}deg) rotateY(${mouseOffset.x}deg)`,
-            transformStyle: 'preserve-3d',
-          }}
-        >
-          {/* Main Visual Composition (Pristine 2048x640 Master Scene) */}
+      <section className="w-full bg-white relative overflow-hidden flex justify-center select-none">
+        <div className="w-full max-w-[1440px] relative">
+          
+          {/* Main Full-Bleed Master Canvas Image (2048x614) */}
           <img
-            src="/images/hero-scene-perfect.jpg"
+            src="/images/hero-full-bleed.jpg"
             alt="ShikshaAI - Learning for what's next"
-            className="w-full h-auto block object-cover"
+            className="w-full h-auto block select-none pointer-events-none"
           />
 
-          {/* ---------------------------------------------------------- */}
-          {/* ANIMATED FOCUS EFFECT ON "SHIKSHA"                         */}
-          {/* Pulsing radiant cyan-and-blue atmospheric light beam       */}
-          {/* ---------------------------------------------------------- */}
+          {/* Dynamic Subtle Focus Glow on "SHIKSHA" */}
           <div 
-            className="absolute top-[8%] left-[12%] right-[2%] h-[38%] pointer-events-none rounded-full blur-2xl opacity-40 animate-shiksha-focus"
+            className="absolute top-[8%] left-[12%] right-[4%] h-[35%] pointer-events-none rounded-full blur-3xl opacity-35 animate-shiksha-focus"
             style={{
-              background: 'radial-gradient(ellipse at 50% 50%, rgba(56, 189, 248, 0.45) 0%, rgba(37, 99, 235, 0.25) 50%, transparent 80%)',
+              background: 'radial-gradient(ellipse at 50% 50%, rgba(56, 189, 248, 0.4) 0%, rgba(37, 99, 235, 0.2) 50%, transparent 80%)',
             }}
           />
 
@@ -208,49 +181,49 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
           {/* INTERACTIVE HOTSPOTS FOR THE 6 SUBJECT PILLS ON THE MIND   */}
           {/* ---------------------------------------------------------- */}
           
-          {/* 1. Science Pill Hotspot */}
+          {/* 1. Science Pill */}
           <div 
             onClick={() => handleTopicClick('Science (Chemistry & Physics)')}
-            className="absolute top-[23%] left-[36.5%] w-[10%] h-[10%] cursor-pointer rounded-full hover:ring-2 hover:ring-emerald-400 hover:shadow-[0_0_20px_rgba(34,197,94,0.6)] transition-all group z-30"
+            className="absolute top-[24%] left-[37%] w-[10%] h-[10%] cursor-pointer rounded-full hover:ring-2 hover:ring-emerald-400 hover:shadow-[0_0_15px_rgba(34,197,94,0.5)] transition-all z-20"
             title="Explore Science Virtual Lab"
           />
 
-          {/* 2. Mathematics Pill Hotspot */}
+          {/* 2. Mathematics Pill */}
           <div 
             onClick={() => handleTopicClick('Mathematics & Geometry')}
-            className="absolute top-[26%] left-[55%] w-[11%] h-[10%] cursor-pointer rounded-full hover:ring-2 hover:ring-blue-400 hover:shadow-[0_0_20px_rgba(59,130,246,0.6)] transition-all group z-30"
-            title="Explore Mathematics Portal"
+            className="absolute top-[27%] left-[55%] w-[11%] h-[10%] cursor-pointer rounded-full hover:ring-2 hover:ring-blue-400 hover:shadow-[0_0_15px_rgba(59,130,246,0.5)] transition-all z-20"
+            title="Explore Mathematics"
           />
 
-          {/* 3. Coding Pill Hotspot */}
+          {/* 3. Coding Pill */}
           <div 
             onClick={() => handleTopicClick('Coding & Computational Thinking')}
-            className="absolute top-[47%] left-[32.5%] w-[9%] h-[10%] cursor-pointer rounded-full hover:ring-2 hover:ring-indigo-400 hover:shadow-[0_0_20px_rgba(99,102,241,0.6)] transition-all group z-30"
-            title="Explore Coding Workbench"
+            className="absolute top-[50%] left-[33%] w-[9%] h-[10%] cursor-pointer rounded-full hover:ring-2 hover:ring-indigo-400 hover:shadow-[0_0_15px_rgba(99,102,241,0.5)] transition-all z-20"
+            title="Explore Coding"
           />
 
-          {/* 4. AI Pill Hotspot */}
+          {/* 4. AI Pill */}
           <div 
-            onClick={() => handleTopicClick('AI & Adaptive Socratic Coaching')}
-            className="absolute top-[48%] left-[58%] w-[7%] h-[10%] cursor-pointer rounded-full hover:ring-2 hover:ring-cyan-400 hover:shadow-[0_0_20px_rgba(6,182,212,0.6)] transition-all group z-30"
+            onClick={() => handleTopicClick('AI & Adaptive Learning')}
+            className="absolute top-[51%] left-[59%] w-[7%] h-[10%] cursor-pointer rounded-full hover:ring-2 hover:ring-cyan-400 hover:shadow-[0_0_15px_rgba(6,182,212,0.5)] transition-all z-20"
             title="Explore AI Learning Agent"
           />
 
-          {/* 5. English Pill Hotspot */}
+          {/* 5. English Pill */}
           <div 
             onClick={() => handleTopicClick('English & Literature')}
-            className="absolute top-[67%] left-[36.5%] w-[9.5%] h-[10%] cursor-pointer rounded-full hover:ring-2 hover:ring-amber-400 hover:shadow-[0_0_20px_rgba(245,158,11,0.6)] transition-all group z-30"
-            title="Explore English Curriculum"
+            className="absolute top-[71%] left-[37%] w-[9.5%] h-[10%] cursor-pointer rounded-full hover:ring-2 hover:ring-amber-400 hover:shadow-[0_0_15px_rgba(245,158,11,0.5)] transition-all z-20"
+            title="Explore English"
           />
 
-          {/* 6. Social Science Pill Hotspot */}
+          {/* 6. Social Science Pill */}
           <div 
-            onClick={() => handleTopicClick('Social Science & History')}
-            className="absolute top-[71%] left-[54.5%] w-[12%] h-[10%] cursor-pointer rounded-full hover:ring-2 hover:ring-lime-400 hover:shadow-[0_0_20px_rgba(163,230,53,0.6)] transition-all group z-30"
+            onClick={() => handleTopicClick('Social Science & Geography')}
+            className="absolute top-[75%] left-[55%] w-[12%] h-[10%] cursor-pointer rounded-full hover:ring-2 hover:ring-lime-400 hover:shadow-[0_0_15px_rgba(163,230,53,0.5)] transition-all z-20"
             title="Explore Social Science"
           />
 
-          {/* Topic Click Feedback Banner */}
+          {/* Active Topic Feedback Pill */}
           {activeTopic && (
             <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-slate-900/95 text-white px-4 py-1.5 rounded-full text-xs font-bold shadow-xl border border-emerald-400/80 animate-bounce z-40 flex items-center gap-2">
               <Sparkles size={14} className="text-[#ccff00]" />
@@ -259,10 +232,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
           )}
 
           {/* ---------------------------------------------------------- */}
-          {/* FUNCTIONAL BUTTON OVERLAYS                                 */}
+          {/* FUNCTIONAL ACTION BUTTON HOTSPOTS                          */}
           {/* ---------------------------------------------------------- */}
           
-          {/* 1. Explore Platform Lime Button (Coordinates: X: 4.4% - 17.4%, Y: 78.9% - 87.5%) */}
+          {/* Explore Platform Lime Button */}
           <button
             onClick={() => {
               sounds.playClick();
@@ -270,17 +243,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
               if (el) el.scrollIntoView({ behavior: 'smooth' });
               else onOpenLogin('student');
             }}
-            className="absolute top-[78.9%] left-[4.39%] w-[13%] h-[8.8%] cursor-pointer rounded-full opacity-0 hover:opacity-100 hover:ring-2 hover:ring-black hover:bg-black/5 transition-all z-30"
+            className="absolute top-[82%] left-[4.3%] w-[13.5%] h-[9.5%] cursor-pointer rounded-full hover:ring-2 hover:ring-black/20 hover:bg-black/5 active:scale-95 transition-all z-20"
             title="Explore Platform"
           />
 
-          {/* 2. Watch Overview Button (Coordinates: X: 18.5% - 30.5%, Y: 78.9% - 87.5%) */}
+          {/* Watch Overview Button */}
           <button
             onClick={() => {
               sounds.playClick();
               setShowOverviewModal(true);
             }}
-            className="absolute top-[78.9%] left-[18.5%] w-[12%] h-[8.8%] cursor-pointer rounded-full opacity-0 hover:opacity-100 hover:ring-2 hover:ring-slate-400 hover:bg-black/5 transition-all z-30"
+            className="absolute top-[82%] left-[18.2%] w-[12.5%] h-[9.5%] cursor-pointer rounded-full hover:ring-2 hover:ring-slate-400/40 hover:bg-black/5 active:scale-95 transition-all z-20"
             title="Watch Overview"
           />
 
@@ -288,10 +261,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
       </section>
 
       {/* ============================================================== */}
-      {/* 3. FEATURE RIBBON / TRUST BAR (EXACT STRIP IN SCREENSHOT 1)    */}
+      {/* 3. FEATURE RIBBON / TRUST BAR (EXACT FLOATING WHITE PILL)      */}
       {/* ============================================================== */}
-      <section id="features" className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 mt-2 mb-10 z-40 relative">
-        <div className="bg-white rounded-full shadow-[0_6px_20px_rgba(0,0,0,0.04)] border border-slate-200/90 py-3 sm:py-3.5 px-6 sm:px-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 divide-y lg:divide-y-0 lg:divide-x divide-slate-200/80 gap-y-3 lg:gap-y-0 items-center">
+      <div id="features" className="max-w-[1140px] mx-auto px-4 -mt-5 sm:-mt-7 lg:-mt-8 relative z-30">
+        <div className="bg-white rounded-full shadow-[0_4px_25px_rgba(0,0,0,0.06)] border border-slate-200/90 py-3 sm:py-3.5 px-6 sm:px-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 divide-y lg:divide-y-0 lg:divide-x divide-slate-200/80 gap-y-3 lg:gap-y-0 items-center">
           
           {/* 1. NCERT Aligned */}
           <div className="flex items-center gap-3 px-3 py-1">
@@ -329,7 +302,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
             </div>
           </div>
 
-          {/* 5. Ministry of Education / Government of India */}
+          {/* 5. Ministry of Education */}
           <div className="flex items-center gap-3 px-3 py-1">
             <div className="w-6 h-6 flex items-center justify-center flex-shrink-0 text-slate-800">
               <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
@@ -352,23 +325,23 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
           </div>
 
         </div>
-      </section>
+      </div>
 
       {/* ============================================================== */}
       {/* 4. CHOOSE YOUR PORTAL SECTION (SECTION 03)                     */}
       {/* ============================================================== */}
-      <section id="portals" className="w-full max-w-[1440px] mx-auto px-6 sm:px-10 lg:px-12 py-10 sm:py-16">
+      <section id="portals" className="w-full max-w-[1140px] mx-auto px-4 sm:px-6 pt-10 sm:pt-12 pb-10">
         
         {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 sm:mb-10 gap-6">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
           
           {/* Left Title */}
-          <div className="space-y-1 sm:space-y-2">
+          <div className="space-y-1">
             <div className="flex items-center gap-2 text-xs font-mono text-slate-400 font-bold">
               <span>03</span>
-              <span className="w-10 h-[1px] bg-slate-300 inline-block" />
+              <span className="w-8 h-[1px] bg-slate-300 inline-block" />
             </div>
-            <h3 className="text-3xl sm:text-4xl font-bold font-editorial text-slate-900 tracking-tight">
+            <h3 className="text-2xl sm:text-3xl font-bold font-editorial text-slate-900 tracking-tight">
               Choose Your Portal
             </h3>
             <p className="text-xs sm:text-sm text-slate-500 font-normal">
@@ -377,25 +350,25 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
           </div>
 
           {/* Right Subtitle & Carousel Controls */}
-          <div className="flex flex-col md:items-end gap-2.5">
-            <div className="flex items-center gap-4">
+          <div className="flex flex-col md:items-end gap-2">
+            <div className="flex items-center gap-3">
               <button
                 onClick={handlePrevPortal}
-                className="w-8 h-8 rounded-full border border-slate-200 bg-white flex items-center justify-center text-slate-600 hover:text-black hover:border-slate-400 shadow-2xs transition-colors"
+                className="w-7 h-7 rounded-full border border-slate-200 bg-white flex items-center justify-center text-slate-600 hover:text-black hover:border-slate-400 shadow-2xs transition-colors"
                 title="Previous"
               >
-                <ArrowLeft size={14} />
+                <ArrowLeft size={13} />
               </button>
               <button
                 onClick={handleNextPortal}
-                className="w-8 h-8 rounded-full border border-slate-200 bg-white flex items-center justify-center text-slate-600 hover:text-black hover:border-slate-400 shadow-2xs transition-colors"
+                className="w-7 h-7 rounded-full border border-slate-200 bg-white flex items-center justify-center text-slate-600 hover:text-black hover:border-slate-400 shadow-2xs transition-colors"
                 title="Next"
               >
-                <ArrowRight size={14} />
+                <ArrowRight size={13} />
               </button>
-              <span className="w-12 h-[1px] bg-slate-300 inline-block" />
+              <span className="w-10 h-[1px] bg-slate-300 inline-block" />
             </div>
-            <div className="text-[10px] font-mono tracking-[0.2em] uppercase text-slate-400 font-semibold">
+            <div className="text-[9px] font-mono tracking-[0.2em] uppercase text-slate-400 font-semibold">
               SAME CURIOSITY. DIFFERENT PERSPECTIVES.
             </div>
           </div>
@@ -403,7 +376,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
         </div>
 
         {/* Three Portal Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {portals.map((portal) => {
             const Icon = portal.icon;
             return (
@@ -413,40 +386,37 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
                   sounds.playClick();
                   onOpenLogin(portal.id);
                 }}
-                className="bg-white rounded-[28px] p-7 sm:p-8 border border-slate-200/90 hover:border-slate-400 hover:shadow-xl transition-all duration-300 cursor-pointer group flex flex-col justify-between relative overflow-hidden"
+                className={`rounded-3xl p-6 sm:p-7 border ${portal.cardBorder} ${portal.cardBg} shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-xl transition-all duration-300 cursor-pointer group flex flex-col justify-between`}
               >
-                {/* Subtle card aura */}
-                <div className={`absolute top-0 right-0 w-44 h-44 bg-gradient-to-bl ${portal.badgeGradient} pointer-events-none rounded-full blur-2xl`} />
-
                 <div>
                   {/* Top Row: Icon Container and Action Arrow Button */}
-                  <div className="flex items-center justify-between mb-5">
-                    <div className={`w-12 h-12 rounded-2xl ${portal.accentBg} ${portal.accentBorder} border flex items-center justify-center ${portal.iconColor} shadow-xs group-hover:scale-105 transition-transform`}>
-                      <Icon size={24} />
+                  <div className="flex items-center justify-between mb-4">
+                    <div className={`w-10 h-10 rounded-2xl ${portal.accentBg} ${portal.accentBorder} border flex items-center justify-center ${portal.iconColor} shadow-xs group-hover:scale-105 transition-transform`}>
+                      <Icon size={20} />
                     </div>
 
-                    <div className={`w-10 h-10 rounded-full ${portal.buttonBg} flex items-center justify-center shadow-xs group-hover:scale-110 transition-all`}>
-                      <ArrowRight size={16} />
+                    <div className={`w-8 h-8 rounded-full ${portal.buttonBg} flex items-center justify-center shadow-xs group-hover:scale-110 transition-all`}>
+                      <ArrowRight size={14} />
                     </div>
                   </div>
 
                   {/* Card Title */}
-                  <h4 className="text-xl font-bold text-slate-900 tracking-tight group-hover:text-black transition-colors">
+                  <h4 className="text-lg font-bold text-slate-900 tracking-tight group-hover:text-black transition-colors">
                     {portal.title}
                   </h4>
 
                   {/* Card Description */}
-                  <p className="text-xs sm:text-[13px] text-slate-500 mt-2.5 leading-relaxed">
+                  <p className="text-xs text-slate-500 mt-2 leading-relaxed">
                     {portal.description}
                   </p>
                 </div>
 
                 {/* Bottom Tags Row */}
-                <div className="pt-6 mt-6 border-t border-slate-100/90 flex flex-wrap gap-2">
+                <div className="pt-5 mt-5 border-t border-slate-100 flex flex-wrap gap-1.5">
                   {portal.tags.map((tag) => (
                     <span
                       key={tag}
-                      className="px-3 py-1 rounded-full bg-slate-50 border border-slate-200/80 text-[11px] font-medium text-slate-600 shadow-2xs group-hover:border-slate-300 group-hover:bg-white transition-colors"
+                      className="px-2.5 py-0.5 rounded-full bg-white border border-slate-200/80 text-[10px] font-medium text-slate-600 shadow-2xs group-hover:border-slate-300 transition-colors"
                     >
                       {tag}
                     </span>
@@ -456,6 +426,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
               </div>
             );
           })}
+        </div>
+
+        {/* Bottom Trust Line */}
+        <div className="w-full pt-8 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-500 gap-2 border-t border-slate-100 mt-8">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[#ccff00] border border-black/20" />
+            <span className="font-semibold text-slate-700">ShikshaAI • National Adaptive STEM Platform</span>
+          </div>
+          <div>
+            Aligned with National Education Policy (NEP 2020) & NITI Aayog Aspirational Districts
+          </div>
         </div>
 
       </section>
@@ -532,21 +513,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
           </div>
         </div>
       )}
-
-      {/* ============================================================== */}
-      {/* 6. FOOTER TRUST STRIP                                          */}
-      {/* ============================================================== */}
-      <footer id="footer" className="w-full border-t border-slate-200/80 bg-white/90 py-8">
-        <div className="max-w-[1440px] mx-auto px-6 sm:px-10 lg:px-12 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#ccff00] border border-black/20" />
-            <span className="font-bold text-slate-700">ShikshaAI • National Adaptive STEM Platform</span>
-          </div>
-          <div>
-            Aligned with National Education Policy (NEP 2020) & NITI Aayog Aspirational Districts
-          </div>
-        </div>
-      </footer>
 
     </div>
   );
