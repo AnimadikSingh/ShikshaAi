@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   GraduationCap, Users, BarChart3, ArrowRight, Play, 
   X, BookOpen, FlaskConical, Sprout, FileText, ChevronDown,
   ArrowLeft, CheckCircle2, Sparkles, Compass, ShieldCheck
 } from 'lucide-react';
 import { UserRole } from '../types';
-import { MindSproutCore } from '../components/MindSproutCore';
 import { sounds } from '../services/audioService';
 
 interface LandingPageProps {
@@ -16,15 +15,22 @@ interface LandingPageProps {
 export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }) => {
   const [showOverviewModal, setShowOverviewModal] = useState(false);
   const [activePortalIndex, setActivePortalIndex] = useState(0);
-  const [scrollY, setScrollY] = useState(0);
+  const [activeTopic, setActiveTopic] = useState<string | null>(null);
+  const heroRef = useRef<HTMLDivElement>(null);
+  const [mouseOffset, setMouseOffset] = useState({ x: 0, y: 0 });
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrollY(window.scrollY);
-    };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  // Handle subtle 3D mouse parallax on hero
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!heroRef.current) return;
+    const rect = heroRef.current.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width - 0.5) * 6;
+    const y = ((e.clientY - rect.top) / rect.height - 0.5) * -6;
+    setMouseOffset({ x, y });
+  };
+
+  const handleMouseLeave = () => {
+    setMouseOffset({ x: 0, y: 0 });
+  };
 
   const portals = [
     {
@@ -37,7 +43,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
       accentBorder: 'border-blue-100',
       iconColor: 'text-blue-600',
       buttonBg: 'bg-blue-600 hover:bg-blue-700 text-white',
-      badgeGradient: 'from-blue-500/15 via-blue-500/5 to-transparent',
+      badgeGradient: 'from-blue-500/12 to-transparent',
     },
     {
       id: 'teacher' as UserRole,
@@ -49,7 +55,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
       accentBorder: 'border-emerald-100',
       iconColor: 'text-emerald-600',
       buttonBg: 'bg-[#22c55e] hover:bg-[#16a34a] text-white',
-      badgeGradient: 'from-emerald-500/15 via-emerald-500/5 to-transparent',
+      badgeGradient: 'from-emerald-500/12 to-transparent',
     },
     {
       id: 'official' as UserRole,
@@ -61,7 +67,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
       accentBorder: 'border-amber-100',
       iconColor: 'text-amber-600',
       buttonBg: 'bg-[#f59e0b] hover:bg-[#d97706] text-white',
-      badgeGradient: 'from-amber-500/15 via-amber-500/5 to-transparent',
+      badgeGradient: 'from-amber-500/12 to-transparent',
     },
   ];
 
@@ -75,13 +81,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
     setActivePortalIndex((prev) => (prev - 1 + portals.length) % portals.length);
   };
 
+  const handleTopicClick = (topicName: string) => {
+    sounds.playClick();
+    setActiveTopic(topicName);
+    setTimeout(() => setActiveTopic(null), 2500);
+  };
+
   return (
     <div className="min-h-screen bg-[#f7f9fc] text-slate-900 font-sans selection:bg-[#ccff00] selection:text-black relative overflow-x-hidden">
       
       {/* ============================================================== */}
-      {/* 1. TOP NAVIGATION HEADER                                       */}
+      {/* 1. TOP NAVIGATION HEADER (MATCHING SCREENSHOT 1)               */}
       {/* ============================================================== */}
-      <header className="w-full bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-200/60 shadow-2xs">
+      <header className="w-full bg-white/95 backdrop-blur-md sticky top-0 z-50 border-b border-slate-200/70 shadow-2xs">
         <div className="max-w-[1440px] mx-auto px-6 sm:px-10 lg:px-12 py-3.5 flex items-center justify-between">
           
           {/* Left Brand Logo */}
@@ -156,184 +168,130 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
       </header>
 
       {/* ============================================================== */}
-      {/* 2. CINEMATIC 3D HERO SECTION WITH PARALLAX CLOUD DEPTH        */}
+      {/* 2. MAIN HERO SECTION (EXACT REPLICA OF 1ST REFERENCE IMAGE)    */}
+      {/* With true cloud depth behind SHIKSHA, visible Mind & boy       */}
       {/* ============================================================== */}
-      <section className="relative w-full overflow-hidden min-h-[620px] sm:min-h-[720px] lg:min-h-[780px] flex flex-col justify-between pt-4 pb-10">
-        
-        {/* ------------------------------------------------------------ */}
-        {/* LAYER 1: BASE MOUNTAIN LANDSCAPE BACKGROUND                  */}
-        {/* ------------------------------------------------------------ */}
-        <div className="absolute inset-0 w-full h-full pointer-events-none select-none z-0">
+      <section 
+        ref={heroRef}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+        className="relative w-full max-w-[1440px] mx-auto pt-2 pb-6 px-4 sm:px-6 lg:px-8 select-none"
+        style={{ perspective: '1400px' }}
+      >
+        {/* Dynamic 3D Parallax Canvas Wrapper */}
+        <div 
+          className="relative w-full rounded-2xl sm:rounded-3xl overflow-hidden shadow-[0_15px_40px_rgba(0,0,0,0.08)] transition-transform duration-300 ease-out"
+          style={{
+            transform: `rotateX(${mouseOffset.y}deg) rotateY(${mouseOffset.x}deg)`,
+            transformStyle: 'preserve-3d',
+          }}
+        >
+          {/* Main Visual Composition (Pristine 2048x640 Master Scene) */}
           <img
-            src="/images/mountain-landscape.jpg"
-            alt="Himalayan mountain landscape background"
-            className="w-full h-full object-cover object-center"
-            style={{
-              transform: `translateY(${scrollY * 0.05}px)`,
-            }}
+            src="/images/hero-scene-perfect.jpg"
+            alt="ShikshaAI - Learning for what's next"
+            className="w-full h-auto block object-cover"
           />
 
-          {/* Left Side Soft Radial / Linear Fade for Text Readability */}
+          {/* ---------------------------------------------------------- */}
+          {/* ANIMATED FOCUS EFFECT ON "SHIKSHA"                         */}
+          {/* Pulsing radiant cyan-and-blue atmospheric light beam       */}
+          {/* ---------------------------------------------------------- */}
           <div 
-            className="absolute inset-0 pointer-events-none"
+            className="absolute top-[8%] left-[12%] right-[2%] h-[38%] pointer-events-none rounded-full blur-2xl opacity-40 animate-shiksha-focus"
             style={{
-              background: 'linear-gradient(90deg, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.75) 28%, rgba(255,255,255,0.3) 50%, transparent 75%)',
+              background: 'radial-gradient(ellipse at 50% 50%, rgba(56, 189, 248, 0.45) 0%, rgba(37, 99, 235, 0.25) 50%, transparent 80%)',
             }}
           />
 
-          {/* Top subtle light wash */}
-          <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-white/60 to-transparent pointer-events-none" />
-        </div>
-
-        {/* ------------------------------------------------------------ */}
-        {/* TOP MICRO-LABELS (INDIA'S ADAPTIVE LEARNING PLATFORM & SCRIPT)*/}
-        {/* ------------------------------------------------------------ */}
-        <div className="max-w-[1440px] w-full mx-auto px-6 sm:px-10 lg:px-12 pt-2 flex items-start justify-between z-30 relative">
+          {/* ---------------------------------------------------------- */}
+          {/* INTERACTIVE HOTSPOTS FOR THE 6 SUBJECT PILLS ON THE MIND   */}
+          {/* ---------------------------------------------------------- */}
           
-          {/* Left Micro-Label */}
-          <div className="flex items-center gap-3 text-[10px] sm:text-xs font-mono tracking-[0.25em] text-slate-600 font-bold uppercase">
-            <span>INDIA'S ADAPTIVE LEARNING PLATFORM</span>
-            <span className="w-12 sm:w-16 h-[2px] bg-[#a3e635] inline-block" />
-          </div>
-
-          {/* Right Script Label */}
-          <div className="text-right space-y-0.5">
-            <div className="font-editorial italic text-sm sm:text-base font-semibold text-slate-800 -rotate-2 drop-shadow-xs">
-              Adaptive Learning for a Brighter Tomorrow
-            </div>
-          </div>
-
-        </div>
-
-        {/* ------------------------------------------------------------ */}
-        {/* LAYER 2: GIANT "SHIKSHA" WITH RADIANT BLUE FOCUS ANIMATION   */}
-        {/* Positioned BEHIND the clouds and mountain foreground         */}
-        {/* ------------------------------------------------------------ */}
-        <div 
-          className="absolute top-12 sm:top-14 lg:top-16 left-0 right-0 w-full text-center select-none pointer-events-none z-10 overflow-hidden"
-          style={{
-            transform: `translateY(${scrollY * 0.12}px)`,
-          }}
-        >
-          <h1 className="text-[14.5vw] font-[900] leading-[0.88] tracking-tight uppercase shiksha-gradient-text animate-shiksha-focus">
-            SHIKSHA
-          </h1>
-        </div>
-
-        {/* ------------------------------------------------------------ */}
-        {/* LAYER 3: FOREGROUND CLOUDS & MIST IN FRONT OF "SHIKSHA"      */}
-        {/* This creates the realistic depth: SHIKSHA emerges from clouds*/}
-        {/* ------------------------------------------------------------ */}
-        <div 
-          className="absolute inset-0 w-full h-full pointer-events-none select-none z-20 overflow-hidden flex items-end"
-          style={{
-            transform: `translateY(${scrollY * 0.04}px)`,
-          }}
-        >
-          {/* Cloud Mist Ridge image extracted from landscape */}
-          <img
-            src="/images/clouds-foreground.png"
-            alt="Foreground mountain clouds"
-            className="w-full h-full object-cover object-center mix-blend-screen opacity-90 animate-cloud-drift"
-          />
-
-          {/* Soft Organic Atmospheric Cloud Glow Overlay */}
+          {/* 1. Science Pill Hotspot */}
           <div 
-            className="absolute bottom-16 left-0 right-0 h-72 pointer-events-none"
-            style={{
-              background: 'radial-gradient(ellipse at 50% 100%, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.3) 45%, transparent 75%)',
-            }}
+            onClick={() => handleTopicClick('Science (Chemistry & Physics)')}
+            className="absolute top-[23%] left-[36.5%] w-[10%] h-[10%] cursor-pointer rounded-full hover:ring-2 hover:ring-emerald-400 hover:shadow-[0_0_20px_rgba(34,197,94,0.6)] transition-all group z-30"
+            title="Explore Science Virtual Lab"
           />
-        </div>
 
-        {/* ------------------------------------------------------------ */}
-        {/* LAYER 4: CENTER MIND BRAIN WITH GREEN SPROUT & ORBIT CAPSULES*/}
-        {/* ------------------------------------------------------------ */}
-        <div className="hidden md:flex absolute left-[50%] -translate-x-1/2 top-[48%] lg:top-[50%] -translate-y-1/2 z-30 pointer-events-auto">
-          <MindSproutCore onSelectTopic={(t) => console.log('Selected topic:', t)} />
-        </div>
-
-        {/* Mobile Mind View */}
-        <div className="md:hidden flex justify-center -mt-4 mb-2 z-30 relative pointer-events-auto">
-          <MindSproutCore onSelectTopic={(t) => console.log('Selected topic:', t)} />
-        </div>
-
-        {/* ------------------------------------------------------------ */}
-        {/* LAYER 5: THE BOY CUTOUT ON THE ROCK WITH "SA" BACKPACK (RIGHT)*/}
-        {/* High-res isolated cutout sitting realistically in foreground */}
-        {/* ------------------------------------------------------------ */}
-        <div 
-          className="hidden md:flex absolute right-0 bottom-0 w-[42%] lg:w-[38%] max-w-[560px] h-[78%] lg:h-[84%] pointer-events-none select-none z-30 overflow-hidden items-end justify-end"
-          style={{
-            transform: `translateY(${scrollY * 0.02}px)`,
-          }}
-        >
-          <img
-            src="/images/boy-cutout.png"
-            alt="Student sitting on rocky mountain peak looking over Himalayas"
-            className="w-full h-full object-contain object-right-bottom drop-shadow-[0_20px_35px_rgba(0,0,0,0.35)]"
+          {/* 2. Mathematics Pill Hotspot */}
+          <div 
+            onClick={() => handleTopicClick('Mathematics & Geometry')}
+            className="absolute top-[26%] left-[55%] w-[11%] h-[10%] cursor-pointer rounded-full hover:ring-2 hover:ring-blue-400 hover:shadow-[0_0_20px_rgba(59,130,246,0.6)] transition-all group z-30"
+            title="Explore Mathematics Portal"
           />
-        </div>
 
-        {/* ------------------------------------------------------------ */}
-        {/* LAYER 6: LEFT EDITORIAL HEADLINE & CTA BUTTONS               */}
-        {/* ------------------------------------------------------------ */}
-        <div className="relative z-35 max-w-[1440px] w-full mx-auto px-6 sm:px-10 lg:px-12 mt-auto pb-4 sm:pb-8">
-          <div className="max-w-lg space-y-5 text-left">
-            
-            {/* Main Headline */}
-            <h2 className="text-4xl sm:text-5xl lg:text-[58px] font-bold text-slate-900 leading-[1.05] tracking-tight font-editorial">
-              Learning <br />
-              for <span className="text-[#84cc16] italic font-editorial drop-shadow-xs">what's next.</span>
-            </h2>
+          {/* 3. Coding Pill Hotspot */}
+          <div 
+            onClick={() => handleTopicClick('Coding & Computational Thinking')}
+            className="absolute top-[47%] left-[32.5%] w-[9%] h-[10%] cursor-pointer rounded-full hover:ring-2 hover:ring-indigo-400 hover:shadow-[0_0_20px_rgba(99,102,241,0.6)] transition-all group z-30"
+            title="Explore Coding Workbench"
+          />
 
-            {/* Paragraph Subtitle */}
-            <p className="text-slate-700 text-sm sm:text-base leading-relaxed max-w-sm sm:max-w-md font-medium">
-              NCERT-aligned learning, interactive 3D labs and personalized guidance for Classes 9–10.
-            </p>
+          {/* 4. AI Pill Hotspot */}
+          <div 
+            onClick={() => handleTopicClick('AI & Adaptive Socratic Coaching')}
+            className="absolute top-[48%] left-[58%] w-[7%] h-[10%] cursor-pointer rounded-full hover:ring-2 hover:ring-cyan-400 hover:shadow-[0_0_20px_rgba(6,182,212,0.6)] transition-all group z-30"
+            title="Explore AI Learning Agent"
+          />
 
-            {/* Action Buttons */}
-            <div className="flex flex-wrap items-center gap-4 pt-2">
-              
-              {/* Lime Green Explore Button */}
-              <button
-                onClick={() => {
-                  sounds.playClick();
-                  const el = document.getElementById('portals');
-                  if (el) el.scrollIntoView({ behavior: 'smooth' });
-                  else onOpenLogin('student');
-                }}
-                className="bg-[#ccff00] hover:bg-[#bcf000] text-black px-6 sm:px-7 py-3.5 rounded-full text-sm font-extrabold flex items-center gap-2.5 shadow-[0_8px_20px_rgba(204,255,0,0.4)] hover:shadow-[0_12px_28px_rgba(204,255,0,0.55)] transition-all active:scale-95 group"
-              >
-                <span>Explore Platform</span>
-                <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-              </button>
+          {/* 5. English Pill Hotspot */}
+          <div 
+            onClick={() => handleTopicClick('English & Literature')}
+            className="absolute top-[67%] left-[36.5%] w-[9.5%] h-[10%] cursor-pointer rounded-full hover:ring-2 hover:ring-amber-400 hover:shadow-[0_0_20px_rgba(245,158,11,0.6)] transition-all group z-30"
+            title="Explore English Curriculum"
+          />
 
-              {/* White Translucent Watch Overview Button */}
-              <button
-                onClick={() => {
-                  sounds.playClick();
-                  setShowOverviewModal(true);
-                }}
-                className="bg-white/90 hover:bg-white text-slate-800 border border-slate-200/90 px-5 sm:px-6 py-3.5 rounded-full text-sm font-bold flex items-center gap-2.5 shadow-xs hover:shadow-md transition-all active:scale-95 backdrop-blur-md"
-              >
-                <div className="w-5 h-5 rounded-full bg-slate-900 text-white flex items-center justify-center">
-                  <Play size={10} fill="currentColor" className="ml-0.5" />
-                </div>
-                <span>Watch Overview</span>
-              </button>
+          {/* 6. Social Science Pill Hotspot */}
+          <div 
+            onClick={() => handleTopicClick('Social Science & History')}
+            className="absolute top-[71%] left-[54.5%] w-[12%] h-[10%] cursor-pointer rounded-full hover:ring-2 hover:ring-lime-400 hover:shadow-[0_0_20px_rgba(163,230,53,0.6)] transition-all group z-30"
+            title="Explore Social Science"
+          />
+
+          {/* Topic Click Feedback Banner */}
+          {activeTopic && (
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-slate-900/95 text-white px-4 py-1.5 rounded-full text-xs font-bold shadow-xl border border-emerald-400/80 animate-bounce z-40 flex items-center gap-2">
+              <Sparkles size={14} className="text-[#ccff00]" />
+              <span>Opening {activeTopic} Modules...</span>
             </div>
+          )}
 
-          </div>
+          {/* ---------------------------------------------------------- */}
+          {/* FUNCTIONAL BUTTON OVERLAYS                                 */}
+          {/* ---------------------------------------------------------- */}
+          
+          {/* 1. Explore Platform Lime Button (Coordinates: X: 4.4% - 17.4%, Y: 78.9% - 87.5%) */}
+          <button
+            onClick={() => {
+              sounds.playClick();
+              const el = document.getElementById('portals');
+              if (el) el.scrollIntoView({ behavior: 'smooth' });
+              else onOpenLogin('student');
+            }}
+            className="absolute top-[78.9%] left-[4.39%] w-[13%] h-[8.8%] cursor-pointer rounded-full opacity-0 hover:opacity-100 hover:ring-2 hover:ring-black hover:bg-black/5 transition-all z-30"
+            title="Explore Platform"
+          />
+
+          {/* 2. Watch Overview Button (Coordinates: X: 18.5% - 30.5%, Y: 78.9% - 87.5%) */}
+          <button
+            onClick={() => {
+              sounds.playClick();
+              setShowOverviewModal(true);
+            }}
+            className="absolute top-[78.9%] left-[18.5%] w-[12%] h-[8.8%] cursor-pointer rounded-full opacity-0 hover:opacity-100 hover:ring-2 hover:ring-slate-400 hover:bg-black/5 transition-all z-30"
+            title="Watch Overview"
+          />
+
         </div>
-
       </section>
 
       {/* ============================================================== */}
-      {/* 3. FLOATING FEATURE RIBBON / TRUST BAR (MATCHING SCREENSHOT)    */}
+      {/* 3. FEATURE RIBBON / TRUST BAR (EXACT STRIP IN SCREENSHOT 1)    */}
       {/* ============================================================== */}
-      <section id="features" className="w-full -mt-6 sm:-mt-8 z-40 relative px-4 sm:px-8 max-w-[1440px] mx-auto">
-        <div className="bg-white/95 backdrop-blur-md rounded-full shadow-[0_10px_30px_rgba(0,0,0,0.06)] border border-slate-200/80 py-3.5 px-6 sm:px-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 divide-y lg:divide-y-0 lg:divide-x divide-slate-200/70 gap-y-3 lg:gap-y-0 items-center">
+      <section id="features" className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 mt-2 mb-10 z-40 relative">
+        <div className="bg-white rounded-full shadow-[0_6px_20px_rgba(0,0,0,0.04)] border border-slate-200/90 py-3 sm:py-3.5 px-6 sm:px-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 divide-y lg:divide-y-0 lg:divide-x divide-slate-200/80 gap-y-3 lg:gap-y-0 items-center">
           
           {/* 1. NCERT Aligned */}
           <div className="flex items-center gap-3 px-3 py-1">
@@ -346,7 +304,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
 
           {/* 2. Interactive 3D Labs */}
           <div className="flex items-center gap-3 px-3 py-1">
-            <FlaskConical className="w-5 h-5 text-blue-600 flex-shrink-0" strokeWidth={1.8} />
+            <FlaskConical className="w-5 h-5 text-slate-800 flex-shrink-0" strokeWidth={1.8} />
             <div>
               <div className="text-xs font-bold text-slate-900 leading-tight">Interactive 3D Labs</div>
               <div className="text-[11px] text-slate-500 font-medium">Learn by Doing</div>
@@ -355,7 +313,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
 
           {/* 3. Personalized Learning */}
           <div className="flex items-center gap-3 px-3 py-1">
-            <Sprout className="w-5 h-5 text-emerald-600 flex-shrink-0" strokeWidth={1.8} />
+            <Sprout className="w-5 h-5 text-slate-800 flex-shrink-0" strokeWidth={1.8} />
             <div>
               <div className="text-xs font-bold text-slate-900 leading-tight">Personalized Learning</div>
               <div className="text-[11px] text-slate-500 font-medium">Your Pace, Your Path</div>
@@ -364,7 +322,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
 
           {/* 4. Classroom Insights */}
           <div className="flex items-center gap-3 px-3 py-1">
-            <BarChart3 className="w-5 h-5 text-indigo-600 flex-shrink-0" strokeWidth={1.8} />
+            <BarChart3 className="w-5 h-5 text-slate-800 flex-shrink-0" strokeWidth={1.8} />
             <div>
               <div className="text-xs font-bold text-slate-900 leading-tight">Classroom Insights</div>
               <div className="text-[11px] text-slate-500 font-medium">For Teachers</div>
@@ -399,13 +357,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
       {/* ============================================================== */}
       {/* 4. CHOOSE YOUR PORTAL SECTION (SECTION 03)                     */}
       {/* ============================================================== */}
-      <section id="portals" className="w-full max-w-[1440px] mx-auto px-6 sm:px-10 lg:px-12 py-16 sm:py-20">
+      <section id="portals" className="w-full max-w-[1440px] mx-auto px-6 sm:px-10 lg:px-12 py-10 sm:py-16">
         
         {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 sm:mb-10 gap-6">
           
           {/* Left Title */}
-          <div className="space-y-2">
+          <div className="space-y-1 sm:space-y-2">
             <div className="flex items-center gap-2 text-xs font-mono text-slate-400 font-bold">
               <span>03</span>
               <span className="w-10 h-[1px] bg-slate-300 inline-block" />
@@ -419,7 +377,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
           </div>
 
           {/* Right Subtitle & Carousel Controls */}
-          <div className="flex flex-col md:items-end gap-3">
+          <div className="flex flex-col md:items-end gap-2.5">
             <div className="flex items-center gap-4">
               <button
                 onClick={handlePrevPortal}

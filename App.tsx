@@ -12,7 +12,7 @@ import { UserRole, Quiz } from './types';
 import { QUIZZES } from './data/curriculum';
 
 const AppContent: React.FC = () => {
-  const [showLaunch, setShowLaunch] = useState(true);
+  const [showLaunch, setShowLaunch] = useState(false);
   const [view, setView] = useState<'landing' | 'login' | 'dashboard' | 'session' | 'quiz'>('landing');
   const [userRole, setUserRole] = useState<UserRole>('student');
   const [loginDefaultRole, setLoginDefaultRole] = useState<UserRole>('student');
