@@ -77,3 +77,54 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Focus & Atmospheric Parallax Keyframes */
+@keyframes shikshaFocus {
+  0%, 100% {
+    filter: drop-shadow(0 8px 20px rgba(37, 99, 235, 0.35)) drop-shadow(0 0 25px rgba(6, 182, 212, 0.25));
+    letter-spacing: -0.02em;
+  }
+  50% {
+    filter: drop-shadow(0 15px 45px rgba(37, 99, 235, 0.65)) drop-shadow(0 0 45px rgba(56, 189, 248, 0.6));
+    letter-spacing: -0.015em;
+  }
+}
+
+.animate-shiksha-focus {
+  animation: shikshaFocus 6s ease-in-out infinite;
+}
+
+@keyframes cloudDriftSlow {
+  0%, 100% {
+    transform: translateX(0) translateY(0);
+  }
+  50% {
+    transform: translateX(18px) translateY(-4px);
+  }
+}
+
+.animate-cloud-drift {
+  animation: cloudDriftSlow 18s ease-in-out infinite;
+}
+
+@keyframes orbPulseGlow {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+}
+
+.animate-orb-glow {
+  animation: orbPulseGlow 4s ease-in-out infinite;
+}
+
+/* Gradient text with radiant blue focus */
+.shiksha-gradient-text {
+  background: linear-gradient(180deg, #1e3a8a 0%, #2563eb 42%, #0284c7 78%, #06b6d4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}

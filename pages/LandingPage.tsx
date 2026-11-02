@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   GraduationCap, Users, BarChart3, ArrowRight, Play, 
   X, BookOpen, FlaskConical, Sprout, FileText, ChevronDown,
   ArrowLeft, CheckCircle2, Sparkles, Compass, ShieldCheck
 } from 'lucide-react';
 import { UserRole } from '../types';
-import { HeroOrb } from '../components/HeroOrb';
+import { MindSproutCore } from '../components/MindSproutCore';
 import { sounds } from '../services/audioService';
 
 interface LandingPageProps {
@@ -16,6 +16,15 @@ interface LandingPageProps {
 export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }) => {
   const [showOverviewModal, setShowOverviewModal] = useState(false);
   const [activePortalIndex, setActivePortalIndex] = useState(0);
+  const [scrollY, setScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollY(window.scrollY);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const portals = [
     {
@@ -24,11 +33,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
       description: 'Access NCERT lessons, 3D virtual labs, adaptive quizzes and your personalized learning path.',
       tags: ['Learn', 'Practice', 'Explore', 'Track'],
       icon: GraduationCap,
-      accentBg: 'bg-blue-50/80',
+      accentBg: 'bg-blue-50/90',
       accentBorder: 'border-blue-100',
       iconColor: 'text-blue-600',
       buttonBg: 'bg-blue-600 hover:bg-blue-700 text-white',
-      badgeGradient: 'from-blue-500/10 to-transparent',
+      badgeGradient: 'from-blue-500/15 via-blue-500/5 to-transparent',
     },
     {
       id: 'teacher' as UserRole,
@@ -36,11 +45,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
       description: 'Real-time classroom insights, concept heatmaps, automated worksheets and AI-powered lesson planning.',
       tags: ['Analytics', 'Lesson Plans', 'Worksheets', 'AI Tools'],
       icon: Users,
-      accentBg: 'bg-emerald-50/80',
+      accentBg: 'bg-emerald-50/90',
       accentBorder: 'border-emerald-100',
       iconColor: 'text-emerald-600',
-      buttonBg: 'bg-[#86efac] hover:bg-[#4ade80] text-slate-900',
-      badgeGradient: 'from-emerald-500/10 to-transparent',
+      buttonBg: 'bg-[#22c55e] hover:bg-[#16a34a] text-white',
+      badgeGradient: 'from-emerald-500/15 via-emerald-500/5 to-transparent',
     },
     {
       id: 'official' as UserRole,
@@ -48,11 +57,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
       description: 'NITI Aayog aligned education benchmarks, learning gap heatmaps and resource audit telemetry.',
       tags: ['Reports', 'Equity Metrics', 'Gap Analysis', 'Planning'],
       icon: BarChart3,
-      accentBg: 'bg-amber-50/80',
+      accentBg: 'bg-amber-50/90',
       accentBorder: 'border-amber-100',
       iconColor: 'text-amber-600',
-      buttonBg: 'bg-[#fcd34d] hover:bg-[#fbbf24] text-slate-900',
-      badgeGradient: 'from-amber-500/10 to-transparent',
+      buttonBg: 'bg-[#f59e0b] hover:bg-[#d97706] text-white',
+      badgeGradient: 'from-amber-500/15 via-amber-500/5 to-transparent',
     },
   ];
 
@@ -67,13 +76,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
   };
 
   return (
-    <div className="min-h-screen bg-[#f7f8fa] text-slate-900 font-sans selection:bg-[#c8ff00] selection:text-black relative overflow-x-hidden">
+    <div className="min-h-screen bg-[#f7f9fc] text-slate-900 font-sans selection:bg-[#ccff00] selection:text-black relative overflow-x-hidden">
       
       {/* ============================================================== */}
       {/* 1. TOP NAVIGATION HEADER                                       */}
       {/* ============================================================== */}
-      <header className="w-full bg-[#f7f8fa]/90 backdrop-blur-md sticky top-0 z-50 border-b border-slate-200/60">
-        <div className="max-w-[1440px] mx-auto px-6 sm:px-10 lg:px-12 py-4 flex items-center justify-between">
+      <header className="w-full bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-200/60 shadow-2xs">
+        <div className="max-w-[1440px] mx-auto px-6 sm:px-10 lg:px-12 py-3.5 flex items-center justify-between">
           
           {/* Left Brand Logo */}
           <div 
@@ -147,91 +156,146 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
       </header>
 
       {/* ============================================================== */}
-      {/* 2. HERO SECTION: ARCHITECTURAL GRID, GIANT SHIKSHA & 3D SCENE   */}
+      {/* 2. CINEMATIC 3D HERO SECTION WITH PARALLAX CLOUD DEPTH        */}
       {/* ============================================================== */}
-      <section className="relative w-full overflow-hidden blueprint-grid border-b border-slate-200/70 pt-4 pb-12 sm:pb-16 lg:pb-20">
+      <section className="relative w-full overflow-hidden min-h-[620px] sm:min-h-[720px] lg:min-h-[780px] flex flex-col justify-between pt-4 pb-10">
         
-        {/* Top Micro-Labels Bar */}
-        <div className="max-w-[1440px] mx-auto px-6 sm:px-10 lg:px-12 pt-2 flex items-start justify-between z-20 relative">
+        {/* ------------------------------------------------------------ */}
+        {/* LAYER 1: BASE MOUNTAIN LANDSCAPE BACKGROUND                  */}
+        {/* ------------------------------------------------------------ */}
+        <div className="absolute inset-0 w-full h-full pointer-events-none select-none z-0">
+          <img
+            src="/images/mountain-landscape.jpg"
+            alt="Himalayan mountain landscape background"
+            className="w-full h-full object-cover object-center"
+            style={{
+              transform: `translateY(${scrollY * 0.05}px)`,
+            }}
+          />
+
+          {/* Left Side Soft Radial / Linear Fade for Text Readability */}
+          <div 
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: 'linear-gradient(90deg, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.75) 28%, rgba(255,255,255,0.3) 50%, transparent 75%)',
+            }}
+          />
+
+          {/* Top subtle light wash */}
+          <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-white/60 to-transparent pointer-events-none" />
+        </div>
+
+        {/* ------------------------------------------------------------ */}
+        {/* TOP MICRO-LABELS (INDIA'S ADAPTIVE LEARNING PLATFORM & SCRIPT)*/}
+        {/* ------------------------------------------------------------ */}
+        <div className="max-w-[1440px] w-full mx-auto px-6 sm:px-10 lg:px-12 pt-2 flex items-start justify-between z-30 relative">
           
           {/* Left Micro-Label */}
-          <div className="flex items-center gap-3 text-[10px] font-mono tracking-[0.25em] text-slate-400 font-semibold uppercase">
+          <div className="flex items-center gap-3 text-[10px] sm:text-xs font-mono tracking-[0.25em] text-slate-600 font-bold uppercase">
             <span>INDIA'S ADAPTIVE LEARNING PLATFORM</span>
-            <span className="w-16 sm:w-24 h-[1px] bg-slate-300 inline-block" />
+            <span className="w-12 sm:w-16 h-[2px] bg-[#a3e635] inline-block" />
           </div>
 
-          {/* Right Micro-Label (02 — ADAPTIVE LEARNING FOR A BRIGHTER TOMORROW) */}
-          <div className="text-right space-y-1">
-            <div className="flex items-center justify-end gap-2 text-[10px] font-mono text-slate-400 font-semibold">
-              <span>02</span>
-              <span className="w-8 sm:w-12 h-[1px] bg-slate-300 inline-block" />
-            </div>
-            <div className="text-[10px] font-mono tracking-[0.18em] text-slate-400 font-semibold uppercase leading-tight max-w-[160px] ml-auto">
-              ADAPTIVE LEARNING FOR A BRIGHTER TOMORROW.
+          {/* Right Script Label */}
+          <div className="text-right space-y-0.5">
+            <div className="font-editorial italic text-sm sm:text-base font-semibold text-slate-800 -rotate-2 drop-shadow-xs">
+              Adaptive Learning for a Brighter Tomorrow
             </div>
           </div>
 
         </div>
 
-        {/* GIANT ARCHITECTURAL BACKGROUND TYPOGRAPHY: SHIKSHA */}
-        <div className="w-full text-center select-none pointer-events-none mt-2 sm:mt-0 overflow-hidden">
-          <h1 className="text-[14vw] font-[900] leading-[0.88] tracking-tight text-[#141b25] uppercase opacity-95">
+        {/* ------------------------------------------------------------ */}
+        {/* LAYER 2: GIANT "SHIKSHA" WITH RADIANT BLUE FOCUS ANIMATION   */}
+        {/* Positioned BEHIND the clouds and mountain foreground         */}
+        {/* ------------------------------------------------------------ */}
+        <div 
+          className="absolute top-12 sm:top-14 lg:top-16 left-0 right-0 w-full text-center select-none pointer-events-none z-10 overflow-hidden"
+          style={{
+            transform: `translateY(${scrollY * 0.12}px)`,
+          }}
+        >
+          <h1 className="text-[14.5vw] font-[900] leading-[0.88] tracking-tight uppercase shiksha-gradient-text animate-shiksha-focus">
             SHIKSHA
           </h1>
         </div>
 
-        {/* ============================================================== */}
-        {/* RIGHT BACKGROUND IMAGE: BOY SITTING ON MOUNTAIN (IMAGE 2)      */}
-        {/* ============================================================== */}
-        <div className="absolute right-0 bottom-0 w-[60%] sm:w-[55%] lg:w-[48%] h-[85%] sm:h-[90%] pointer-events-none select-none z-10 overflow-hidden flex items-end justify-end">
+        {/* ------------------------------------------------------------ */}
+        {/* LAYER 3: FOREGROUND CLOUDS & MIST IN FRONT OF "SHIKSHA"      */}
+        {/* This creates the realistic depth: SHIKSHA emerges from clouds*/}
+        {/* ------------------------------------------------------------ */}
+        <div 
+          className="absolute inset-0 w-full h-full pointer-events-none select-none z-20 overflow-hidden flex items-end"
+          style={{
+            transform: `translateY(${scrollY * 0.04}px)`,
+          }}
+        >
+          {/* Cloud Mist Ridge image extracted from landscape */}
           <img
-            src="/boy-mountain.png"
-            alt="Student sitting on mountain cliff with ShikshaAI backpack"
-            className="w-full h-full object-contain object-right-bottom mix-blend-multiply opacity-95"
+            src="/images/clouds-foreground.png"
+            alt="Foreground mountain clouds"
+            className="w-full h-full object-cover object-center mix-blend-screen opacity-90 animate-cloud-drift"
+          />
+
+          {/* Soft Organic Atmospheric Cloud Glow Overlay */}
+          <div 
+            className="absolute bottom-16 left-0 right-0 h-72 pointer-events-none"
             style={{
-              maskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.4) 15%, black 45%)',
-              WebkitMaskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.4) 15%, black 45%)',
+              background: 'radial-gradient(ellipse at 50% 100%, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.3) 45%, transparent 75%)',
             }}
           />
         </div>
 
-        {/* ============================================================== */}
-        {/* CENTERPIECE 3D GLASS SPHERE WITH ORBITAL SUBJECT NODES         */}
-        {/* ============================================================== */}
-        <div className="hidden md:flex absolute left-[50%] -translate-x-1/2 top-[46%] sm:top-[48%] -translate-y-1/2 z-20 pointer-events-auto">
-          <HeroOrb />
+        {/* ------------------------------------------------------------ */}
+        {/* LAYER 4: CENTER MIND BRAIN WITH GREEN SPROUT & ORBIT CAPSULES*/}
+        {/* ------------------------------------------------------------ */}
+        <div className="hidden md:flex absolute left-[50%] -translate-x-1/2 top-[48%] lg:top-[50%] -translate-y-1/2 z-30 pointer-events-auto">
+          <MindSproutCore onSelectTopic={(t) => console.log('Selected topic:', t)} />
         </div>
 
-        {/* Mobile Orb Fallback */}
-        <div className="md:hidden flex justify-center -mt-6 mb-4 z-20 relative">
-          <HeroOrb />
+        {/* Mobile Mind View */}
+        <div className="md:hidden flex justify-center -mt-4 mb-2 z-30 relative pointer-events-auto">
+          <MindSproutCore onSelectTopic={(t) => console.log('Selected topic:', t)} />
         </div>
 
-        {/* ============================================================== */}
-        {/* LEFT EDITORIAL HERO HEADLINE & CTA                             */}
-        {/* ============================================================== */}
-        <div className="relative z-30 max-w-[1440px] mx-auto px-6 sm:px-10 lg:px-12 -mt-10 sm:-mt-16 lg:-mt-24">
-          <div className="max-w-xl space-y-6 text-left">
+        {/* ------------------------------------------------------------ */}
+        {/* LAYER 5: THE BOY CUTOUT ON THE ROCK WITH "SA" BACKPACK (RIGHT)*/}
+        {/* High-res isolated cutout sitting realistically in foreground */}
+        {/* ------------------------------------------------------------ */}
+        <div 
+          className="hidden md:flex absolute right-0 bottom-0 w-[42%] lg:w-[38%] max-w-[560px] h-[78%] lg:h-[84%] pointer-events-none select-none z-30 overflow-hidden items-end justify-end"
+          style={{
+            transform: `translateY(${scrollY * 0.02}px)`,
+          }}
+        >
+          <img
+            src="/images/boy-cutout.png"
+            alt="Student sitting on rocky mountain peak looking over Himalayas"
+            className="w-full h-full object-contain object-right-bottom drop-shadow-[0_20px_35px_rgba(0,0,0,0.35)]"
+          />
+        </div>
+
+        {/* ------------------------------------------------------------ */}
+        {/* LAYER 6: LEFT EDITORIAL HEADLINE & CTA BUTTONS               */}
+        {/* ------------------------------------------------------------ */}
+        <div className="relative z-35 max-w-[1440px] w-full mx-auto px-6 sm:px-10 lg:px-12 mt-auto pb-4 sm:pb-8">
+          <div className="max-w-lg space-y-5 text-left">
             
-            {/* 01 Index Indicator */}
-            <div className="flex items-center gap-2 text-xs font-mono text-slate-400 font-bold">
-              <span>01</span>
-              <span className="w-12 h-[1px] bg-slate-300 inline-block" />
-            </div>
-
-            {/* Headline */}
-            <h2 className="text-4xl sm:text-5xl lg:text-[56px] font-bold text-slate-900 leading-[1.06] tracking-tight font-editorial">
+            {/* Main Headline */}
+            <h2 className="text-4xl sm:text-5xl lg:text-[58px] font-bold text-slate-900 leading-[1.05] tracking-tight font-editorial">
               Learning <br />
-              for <span className="text-[#4e6b2c] italic font-editorial">what's next.</span>
+              for <span className="text-[#84cc16] italic font-editorial drop-shadow-xs">what's next.</span>
             </h2>
 
             {/* Paragraph Subtitle */}
-            <p className="text-slate-600 text-sm sm:text-base leading-relaxed max-w-sm sm:max-w-md font-normal">
-              NCERT–aligned learning, interactive 3D labs and personalized guidance for Classes 9–10.
+            <p className="text-slate-700 text-sm sm:text-base leading-relaxed max-w-sm sm:max-w-md font-medium">
+              NCERT-aligned learning, interactive 3D labs and personalized guidance for Classes 9–10.
             </p>
 
             {/* Action Buttons */}
             <div className="flex flex-wrap items-center gap-4 pt-2">
+              
+              {/* Lime Green Explore Button */}
               <button
                 onClick={() => {
                   sounds.playClick();
@@ -239,21 +303,22 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
                   if (el) el.scrollIntoView({ behavior: 'smooth' });
                   else onOpenLogin('student');
                 }}
-                className="bg-[#0b1017] hover:bg-slate-800 text-white px-6 sm:px-7 py-3.5 rounded-full text-sm font-semibold flex items-center gap-2.5 shadow-md hover:shadow-lg transition-all active:scale-95 group"
+                className="bg-[#ccff00] hover:bg-[#bcf000] text-black px-6 sm:px-7 py-3.5 rounded-full text-sm font-extrabold flex items-center gap-2.5 shadow-[0_8px_20px_rgba(204,255,0,0.4)] hover:shadow-[0_12px_28px_rgba(204,255,0,0.55)] transition-all active:scale-95 group"
               >
                 <span>Explore Platform</span>
-                <ArrowRight size={15} className="group-hover:translate-x-1 transition-transform" />
+                <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
               </button>
 
+              {/* White Translucent Watch Overview Button */}
               <button
                 onClick={() => {
                   sounds.playClick();
                   setShowOverviewModal(true);
                 }}
-                className="bg-white/90 hover:bg-white text-slate-800 border border-slate-200/90 px-5 sm:px-6 py-3.5 rounded-full text-sm font-semibold flex items-center gap-2.5 shadow-xs hover:shadow-sm transition-all active:scale-95"
+                className="bg-white/90 hover:bg-white text-slate-800 border border-slate-200/90 px-5 sm:px-6 py-3.5 rounded-full text-sm font-bold flex items-center gap-2.5 shadow-xs hover:shadow-md transition-all active:scale-95 backdrop-blur-md"
               >
-                <div className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center text-slate-700">
-                  <Play size={10} fill="currentColor" />
+                <div className="w-5 h-5 rounded-full bg-slate-900 text-white flex items-center justify-center">
+                  <Play size={10} fill="currentColor" className="ml-0.5" />
                 </div>
                 <span>Watch Overview</span>
               </button>
@@ -265,13 +330,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
       </section>
 
       {/* ============================================================== */}
-      {/* 3. FEATURE RIBBON / TRUST BAR (MATCHING REFERENCE STRIP)       */}
+      {/* 3. FLOATING FEATURE RIBBON / TRUST BAR (MATCHING SCREENSHOT)    */}
       {/* ============================================================== */}
-      <section id="features" className="w-full border-b border-slate-200/80 bg-white/70 backdrop-blur-md py-4 px-6 sm:px-10 lg:px-12">
-        <div className="max-w-[1440px] mx-auto grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 divide-y lg:divide-y-0 lg:divide-x divide-slate-200/70 gap-y-4 lg:gap-y-0">
+      <section id="features" className="w-full -mt-6 sm:-mt-8 z-40 relative px-4 sm:px-8 max-w-[1440px] mx-auto">
+        <div className="bg-white/95 backdrop-blur-md rounded-full shadow-[0_10px_30px_rgba(0,0,0,0.06)] border border-slate-200/80 py-3.5 px-6 sm:px-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 divide-y lg:divide-y-0 lg:divide-x divide-slate-200/70 gap-y-3 lg:gap-y-0 items-center">
           
           {/* 1. NCERT Aligned */}
-          <div className="flex items-center gap-3.5 px-3 py-1">
+          <div className="flex items-center gap-3 px-3 py-1">
             <BookOpen className="w-5 h-5 text-slate-800 flex-shrink-0" strokeWidth={1.8} />
             <div>
               <div className="text-xs font-bold text-slate-900 leading-tight">NCERT Aligned</div>
@@ -280,8 +345,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
           </div>
 
           {/* 2. Interactive 3D Labs */}
-          <div className="flex items-center gap-3.5 px-3 py-1">
-            <FlaskConical className="w-5 h-5 text-slate-800 flex-shrink-0" strokeWidth={1.8} />
+          <div className="flex items-center gap-3 px-3 py-1">
+            <FlaskConical className="w-5 h-5 text-blue-600 flex-shrink-0" strokeWidth={1.8} />
             <div>
               <div className="text-xs font-bold text-slate-900 leading-tight">Interactive 3D Labs</div>
               <div className="text-[11px] text-slate-500 font-medium">Learn by Doing</div>
@@ -289,8 +354,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
           </div>
 
           {/* 3. Personalized Learning */}
-          <div className="flex items-center gap-3.5 px-3 py-1">
-            <Sprout className="w-5 h-5 text-slate-800 flex-shrink-0" strokeWidth={1.8} />
+          <div className="flex items-center gap-3 px-3 py-1">
+            <Sprout className="w-5 h-5 text-emerald-600 flex-shrink-0" strokeWidth={1.8} />
             <div>
               <div className="text-xs font-bold text-slate-900 leading-tight">Personalized Learning</div>
               <div className="text-[11px] text-slate-500 font-medium">Your Pace, Your Path</div>
@@ -298,8 +363,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
           </div>
 
           {/* 4. Classroom Insights */}
-          <div className="flex items-center gap-3.5 px-3 py-1">
-            <BarChart3 className="w-5 h-5 text-slate-800 flex-shrink-0" strokeWidth={1.8} />
+          <div className="flex items-center gap-3 px-3 py-1">
+            <BarChart3 className="w-5 h-5 text-indigo-600 flex-shrink-0" strokeWidth={1.8} />
             <div>
               <div className="text-xs font-bold text-slate-900 leading-tight">Classroom Insights</div>
               <div className="text-[11px] text-slate-500 font-medium">For Teachers</div>
@@ -307,8 +372,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
           </div>
 
           {/* 5. Ministry of Education / Government of India */}
-          <div className="flex items-center gap-3.5 px-3 py-1">
-            {/* National Emblem Silhouette */}
+          <div className="flex items-center gap-3 px-3 py-1">
             <div className="w-6 h-6 flex items-center justify-center flex-shrink-0 text-slate-800">
               <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
                 <path d="M12 2C10.9 2 10 2.9 10 4c0 .3.1.5.2.8C9.5 5.2 8.5 6 7.5 7.2 6.8 8.1 6.5 9 6.5 10c0 1.2.6 2.3 1.5 3.1-.3.5-.5 1.1-.5 1.7v1.2c0 .6.4 1 1 1h7c.6 0 1-.4 1-1v-1.2c0-.6-.2-1.2-.5-1.7.9-.8 1.5-1.9 1.5-3.1 0-1-.3-1.9-1-2.8C15.5 6 14.5 5.2 13.8 4.8c.1-.3.2-.5.2-.8 0-1.1-.9-2-2-2zm-3 17h6v2H9v-2z" />
@@ -321,7 +385,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
           </div>
 
           {/* 6. NEP 2020 */}
-          <div className="flex items-center gap-3.5 px-3 py-1">
+          <div className="flex items-center gap-3 px-3 py-1">
             <FileText className="w-5 h-5 text-slate-800 flex-shrink-0" strokeWidth={1.8} />
             <div>
               <div className="text-xs font-bold text-slate-900 leading-tight">NEP 2020</div>
@@ -359,14 +423,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
             <div className="flex items-center gap-4">
               <button
                 onClick={handlePrevPortal}
-                className="w-8 h-8 rounded-full border border-slate-200 flex items-center justify-center text-slate-600 hover:text-black hover:border-slate-400 transition-colors"
+                className="w-8 h-8 rounded-full border border-slate-200 bg-white flex items-center justify-center text-slate-600 hover:text-black hover:border-slate-400 shadow-2xs transition-colors"
                 title="Previous"
               >
                 <ArrowLeft size={14} />
               </button>
               <button
                 onClick={handleNextPortal}
-                className="w-8 h-8 rounded-full border border-slate-200 flex items-center justify-center text-slate-600 hover:text-black hover:border-slate-400 transition-colors"
+                className="w-8 h-8 rounded-full border border-slate-200 bg-white flex items-center justify-center text-slate-600 hover:text-black hover:border-slate-400 shadow-2xs transition-colors"
                 title="Next"
               >
                 <ArrowRight size={14} />
@@ -391,10 +455,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
                   sounds.playClick();
                   onOpenLogin(portal.id);
                 }}
-                className={`bg-white rounded-[28px] p-7 sm:p-8 border border-slate-200/90 hover:border-slate-400 hover:shadow-xl transition-all duration-300 cursor-pointer group flex flex-col justify-between relative overflow-hidden`}
+                className="bg-white rounded-[28px] p-7 sm:p-8 border border-slate-200/90 hover:border-slate-400 hover:shadow-xl transition-all duration-300 cursor-pointer group flex flex-col justify-between relative overflow-hidden"
               >
                 {/* Subtle card aura */}
-                <div className={`absolute top-0 right-0 w-36 h-36 bg-gradient-to-bl ${portal.badgeGradient} pointer-events-none rounded-full blur-2xl`} />
+                <div className={`absolute top-0 right-0 w-44 h-44 bg-gradient-to-bl ${portal.badgeGradient} pointer-events-none rounded-full blur-2xl`} />
 
                 <div>
                   {/* Top Row: Icon Container and Action Arrow Button */}
@@ -424,7 +488,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
                   {portal.tags.map((tag) => (
                     <span
                       key={tag}
-                      className="px-3 py-1 rounded-full bg-white border border-slate-200/80 text-[11px] font-medium text-slate-600 shadow-2xs group-hover:border-slate-300 transition-colors"
+                      className="px-3 py-1 rounded-full bg-slate-50 border border-slate-200/80 text-[11px] font-medium text-slate-600 shadow-2xs group-hover:border-slate-300 group-hover:bg-white transition-colors"
                     >
                       {tag}
                     </span>
@@ -514,7 +578,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
       {/* ============================================================== */}
       {/* 6. FOOTER TRUST STRIP                                          */}
       {/* ============================================================== */}
-      <footer id="footer" className="w-full border-t border-slate-200/80 bg-white/70 py-8">
+      <footer id="footer" className="w-full border-t border-slate-200/80 bg-white/90 py-8">
         <div className="max-w-[1440px] mx-auto px-6 sm:px-10 lg:px-12 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-[#ccff00] border border-black/20" />
