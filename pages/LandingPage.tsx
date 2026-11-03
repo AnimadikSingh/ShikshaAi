@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   GraduationCap, Users, BarChart3, ArrowRight, Play, 
   X, BookOpen, FlaskConical, Sprout, FileText, ChevronDown,
-  ArrowLeft, Sparkles
+  ArrowLeft, Sparkles, Code2, Cpu, Share2
 } from 'lucide-react';
 import { UserRole } from '../types';
 import { sounds } from '../services/audioService';
@@ -24,10 +24,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
       description: 'Access NCERT lessons, 3D virtual labs, adaptive quizzes and your personalized learning path.',
       tags: ['Learn', 'Practice', 'Explore', 'Track'],
       icon: GraduationCap,
-      accentBg: 'bg-blue-50',
-      accentBorder: 'border-blue-100',
+      accentBg: 'bg-[#e8f1fd]',
       iconColor: 'text-blue-600',
-      cardBg: 'bg-gradient-to-br from-white via-blue-50/20 to-blue-50/50',
+      cardBg: 'bg-gradient-to-br from-white via-white to-blue-50/70',
       cardBorder: 'border-blue-100/80',
       buttonBg: 'bg-blue-600 hover:bg-blue-700 text-white',
     },
@@ -37,12 +36,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
       description: 'Real-time classroom insights, concept heatmaps, automated worksheets and AI-powered lesson planning.',
       tags: ['Analytics', 'Lesson Plans', 'Worksheets', 'AI Tools'],
       icon: Users,
-      accentBg: 'bg-emerald-50',
-      accentBorder: 'border-emerald-100',
+      accentBg: 'bg-[#e6f8ee]',
       iconColor: 'text-emerald-600',
-      cardBg: 'bg-gradient-to-br from-white via-emerald-50/20 to-emerald-50/50',
+      cardBg: 'bg-gradient-to-br from-white via-white to-emerald-50/70',
       cardBorder: 'border-emerald-100/80',
-      buttonBg: 'bg-emerald-500 hover:bg-emerald-600 text-white',
+      buttonBg: 'bg-[#22c55e] hover:bg-[#16a34a] text-white',
     },
     {
       id: 'official' as UserRole,
@@ -50,12 +48,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
       description: 'NITI Aayog aligned education benchmarks, learning gap heatmaps and resource audit telemetry.',
       tags: ['Reports', 'Equity Metrics', 'Gap Analysis', 'Planning'],
       icon: BarChart3,
-      accentBg: 'bg-amber-50',
-      accentBorder: 'border-amber-100',
+      accentBg: 'bg-[#fef6e5]',
       iconColor: 'text-amber-600',
-      cardBg: 'bg-gradient-to-br from-white via-amber-50/20 to-amber-50/50',
+      cardBg: 'bg-gradient-to-br from-white via-white to-amber-50/70',
       cardBorder: 'border-amber-100/80',
-      buttonBg: 'bg-amber-500 hover:bg-amber-600 text-white',
+      buttonBg: 'bg-[#f59e0b] hover:bg-[#d97706] text-white',
     },
   ];
 
@@ -76,13 +73,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
   };
 
   return (
-    <div className="min-h-screen bg-white text-slate-900 font-sans selection:bg-[#ccff00] selection:text-black">
+    <div className="min-h-screen bg-white text-slate-900 font-sans selection:bg-[#ccff00] selection:text-black relative overflow-x-hidden">
       
       {/* ============================================================== */}
       {/* 1. TOP NAVIGATION HEADER                                       */}
       {/* ============================================================== */}
-      <header className="w-full bg-white sticky top-0 z-50 border-b border-slate-100">
-        <div className="max-w-[1240px] mx-auto px-6 sm:px-8 py-3.5 flex items-center justify-between">
+      <header className="w-full bg-white/95 backdrop-blur-md sticky top-0 z-50 border-b border-slate-100">
+        <div className="max-w-[1280px] mx-auto px-6 sm:px-8 py-3.5 flex items-center justify-between">
           
           {/* Left Brand Logo */}
           <div 
@@ -156,115 +153,254 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
       </header>
 
       {/* ============================================================== */}
-      {/* 2. FULL-BLEED HERO SECTION (PIXEL-PERFECT REPLICA OF IMAGE 3)  */}
-      {/* Edge-to-edge panoramic canvas with natural cloud depth         */}
+      {/* 2. FULL-BLEED MULTI-LAYER HERO SECTION                         */}
+      {/* Built with real CSS typography, cloud depth, and crisp assets  */}
       {/* ============================================================== */}
-      <section className="w-full bg-white relative overflow-hidden flex justify-center select-none">
-        <div className="w-full max-w-[1440px] relative">
-          
-          {/* Main Full-Bleed Master Canvas Image (2048x614) */}
+      <section className="relative w-full overflow-hidden bg-white min-h-[540px] sm:min-h-[580px] lg:min-h-[640px] flex items-center">
+        
+        {/* ------------------------------------------------------------ */}
+        {/* LAYER 1: BASE MOUNTAIN LANDSCAPE BACKGROUND                  */}
+        {/* With natural left-side pure white gradient fade              */}
+        {/* ------------------------------------------------------------ */}
+        <div className="absolute inset-0 w-full h-full pointer-events-none select-none z-0">
           <img
-            src="/images/hero-full-bleed.jpg"
-            alt="ShikshaAI - Learning for what's next"
-            className="w-full h-auto block select-none pointer-events-none"
+            src="/images/mountain-landscape.jpg"
+            alt="Himalayan mountain background"
+            className="w-full h-full object-cover object-center"
           />
 
-          {/* Dynamic Subtle Focus Glow on "SHIKSHA" */}
+          {/* Left Side Seamless Pure White Fade (eliminates any harsh image cut) */}
           <div 
-            className="absolute top-[8%] left-[12%] right-[4%] h-[35%] pointer-events-none rounded-full blur-3xl opacity-35 animate-shiksha-focus"
+            className="absolute inset-0 pointer-events-none"
             style={{
-              background: 'radial-gradient(ellipse at 50% 50%, rgba(56, 189, 248, 0.4) 0%, rgba(37, 99, 235, 0.2) 50%, transparent 80%)',
+              background: 'linear-gradient(90deg, #ffffff 0%, #ffffff 24%, rgba(255,255,255,0.85) 35%, rgba(255,255,255,0.3) 50%, transparent 65%)',
             }}
           />
 
-          {/* ---------------------------------------------------------- */}
-          {/* INTERACTIVE HOTSPOTS FOR THE 6 SUBJECT PILLS ON THE MIND   */}
-          {/* ---------------------------------------------------------- */}
-          
-          {/* 1. Science Pill */}
-          <div 
-            onClick={() => handleTopicClick('Science (Chemistry & Physics)')}
-            className="absolute top-[24%] left-[37%] w-[10%] h-[10%] cursor-pointer rounded-full hover:ring-2 hover:ring-emerald-400 hover:shadow-[0_0_15px_rgba(34,197,94,0.5)] transition-all z-20"
-            title="Explore Science Virtual Lab"
-          />
-
-          {/* 2. Mathematics Pill */}
-          <div 
-            onClick={() => handleTopicClick('Mathematics & Geometry')}
-            className="absolute top-[27%] left-[55%] w-[11%] h-[10%] cursor-pointer rounded-full hover:ring-2 hover:ring-blue-400 hover:shadow-[0_0_15px_rgba(59,130,246,0.5)] transition-all z-20"
-            title="Explore Mathematics"
-          />
-
-          {/* 3. Coding Pill */}
-          <div 
-            onClick={() => handleTopicClick('Coding & Computational Thinking')}
-            className="absolute top-[50%] left-[33%] w-[9%] h-[10%] cursor-pointer rounded-full hover:ring-2 hover:ring-indigo-400 hover:shadow-[0_0_15px_rgba(99,102,241,0.5)] transition-all z-20"
-            title="Explore Coding"
-          />
-
-          {/* 4. AI Pill */}
-          <div 
-            onClick={() => handleTopicClick('AI & Adaptive Learning')}
-            className="absolute top-[51%] left-[59%] w-[7%] h-[10%] cursor-pointer rounded-full hover:ring-2 hover:ring-cyan-400 hover:shadow-[0_0_15px_rgba(6,182,212,0.5)] transition-all z-20"
-            title="Explore AI Learning Agent"
-          />
-
-          {/* 5. English Pill */}
-          <div 
-            onClick={() => handleTopicClick('English & Literature')}
-            className="absolute top-[71%] left-[37%] w-[9.5%] h-[10%] cursor-pointer rounded-full hover:ring-2 hover:ring-amber-400 hover:shadow-[0_0_15px_rgba(245,158,11,0.5)] transition-all z-20"
-            title="Explore English"
-          />
-
-          {/* 6. Social Science Pill */}
-          <div 
-            onClick={() => handleTopicClick('Social Science & Geography')}
-            className="absolute top-[75%] left-[55%] w-[12%] h-[10%] cursor-pointer rounded-full hover:ring-2 hover:ring-lime-400 hover:shadow-[0_0_15px_rgba(163,230,53,0.5)] transition-all z-20"
-            title="Explore Social Science"
-          />
-
-          {/* Active Topic Feedback Pill */}
-          {activeTopic && (
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-slate-900/95 text-white px-4 py-1.5 rounded-full text-xs font-bold shadow-xl border border-emerald-400/80 animate-bounce z-40 flex items-center gap-2">
-              <Sparkles size={14} className="text-[#ccff00]" />
-              <span>Opening {activeTopic} Modules...</span>
-            </div>
-          )}
-
-          {/* ---------------------------------------------------------- */}
-          {/* FUNCTIONAL ACTION BUTTON HOTSPOTS                          */}
-          {/* ---------------------------------------------------------- */}
-          
-          {/* Explore Platform Lime Button */}
-          <button
-            onClick={() => {
-              sounds.playClick();
-              const el = document.getElementById('portals');
-              if (el) el.scrollIntoView({ behavior: 'smooth' });
-              else onOpenLogin('student');
-            }}
-            className="absolute top-[82%] left-[4.3%] w-[13.5%] h-[9.5%] cursor-pointer rounded-full hover:ring-2 hover:ring-black/20 hover:bg-black/5 active:scale-95 transition-all z-20"
-            title="Explore Platform"
-          />
-
-          {/* Watch Overview Button */}
-          <button
-            onClick={() => {
-              sounds.playClick();
-              setShowOverviewModal(true);
-            }}
-            className="absolute top-[82%] left-[18.2%] w-[12.5%] h-[9.5%] cursor-pointer rounded-full hover:ring-2 hover:ring-slate-400/40 hover:bg-black/5 active:scale-95 transition-all z-20"
-            title="Watch Overview"
-          />
-
+          {/* Top subtle sky fade */}
+          <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-white/70 to-transparent pointer-events-none" />
         </div>
+
+        {/* ------------------------------------------------------------ */}
+        {/* LAYER 2: GIANT "SHIKSHA" VECTOR TYPOGRAPHY                   */}
+        {/* Real CSS text behind the mountain clouds with focus glow    */}
+        {/* ------------------------------------------------------------ */}
+        <div className="absolute top-[8%] sm:top-[6%] left-0 right-0 w-full text-center select-none pointer-events-none z-10 overflow-hidden">
+          <h1 className="text-[14vw] sm:text-[13vw] lg:text-[160px] 2xl:text-[185px] font-[900] leading-none tracking-tight uppercase shiksha-gradient-text animate-shiksha-focus">
+            SHIKSHA
+          </h1>
+        </div>
+
+        {/* ------------------------------------------------------------ */}
+        {/* LAYER 3: FOREGROUND MOUNTAIN CLOUDS IN FRONT OF "SHIKSHA"    */}
+        {/* Gives real physical depth: clouds roll over lower letters    */}
+        {/* ------------------------------------------------------------ */}
+        <div className="absolute inset-0 w-full h-full pointer-events-none select-none z-15 overflow-hidden flex items-end">
+          <img
+            src="/images/clouds-depth-layer.png"
+            alt="Foreground Clouds Overlapping SHIKSHA"
+            className="w-full h-full object-cover object-center"
+          />
+        </div>
+
+        {/* ------------------------------------------------------------ */}
+        {/* LAYER 4: CENTER MIND BRAIN WITH GREEN SPROUT & 6 PILLS       */}
+        {/* Crisp 918x566 resolution with bioluminescent aura & pills   */}
+        {/* ------------------------------------------------------------ */}
+        <div className="hidden lg:flex absolute left-[51%] -translate-x-1/2 top-[47%] -translate-y-1/2 z-20 pointer-events-auto">
+          <div className="relative w-[480px] h-[360px] flex items-center justify-center select-none">
+            
+            {/* Ambient Bioluminescent Glow Halo */}
+            <div 
+              className="absolute w-72 h-72 rounded-full blur-3xl pointer-events-none opacity-70 animate-orb-glow"
+              style={{
+                background: 'radial-gradient(circle, rgba(163, 230, 53, 0.5) 0%, rgba(34, 197, 94, 0.4) 35%, rgba(6, 182, 212, 0.3) 65%, transparent 80%)',
+              }}
+            />
+
+            {/* High-Resolution Mind Sprout Centerpiece */}
+            <img
+              src="/images/mind-sprout-clean.png"
+              alt="Neural Mind with Knowledge Sprout"
+              className="w-[380px] h-auto object-contain drop-shadow-[0_12px_30px_rgba(34,197,94,0.4)] animate-float-gentle"
+            />
+
+            {/* 6 Real Interactive Floating Subject Pills */}
+            
+            {/* 1. Science Pill (Top) */}
+            <div
+              onClick={() => handleTopicClick('Science (Chemistry & Physics)')}
+              className="absolute top-2 left-[28%] -translate-x-1/2 bg-white/95 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-slate-200/90 shadow-[0_4px_14px_rgba(0,0,0,0.06)] hover:shadow-lg hover:border-emerald-400 hover:scale-105 transition-all flex items-center gap-2 cursor-pointer z-30 group"
+            >
+              <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                <FlaskConical size={12} strokeWidth={2.5} />
+              </span>
+              <span className="text-xs font-bold text-slate-800 group-hover:text-emerald-700 transition-colors">
+                Science
+              </span>
+            </div>
+
+            {/* 2. Mathematics Pill (Top Right) */}
+            <div
+              onClick={() => handleTopicClick('Mathematics & Geometry')}
+              className="absolute top-8 right-6 bg-white/95 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-slate-200/90 shadow-[0_4px_14px_rgba(0,0,0,0.06)] hover:shadow-lg hover:border-blue-400 hover:scale-105 transition-all flex items-center gap-2 cursor-pointer z-30 group"
+            >
+              <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-[10px]">
+                √x
+              </span>
+              <span className="text-xs font-bold text-slate-800 group-hover:text-blue-700 transition-colors">
+                Mathematics
+              </span>
+            </div>
+
+            {/* 3. Coding Pill (Center Left) */}
+            <div
+              onClick={() => handleTopicClick('Coding & Computational Thinking')}
+              className="absolute top-[48%] -left-3 -translate-y-1/2 bg-white/95 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-slate-200/90 shadow-[0_4px_14px_rgba(0,0,0,0.06)] hover:shadow-lg hover:border-indigo-400 hover:scale-105 transition-all flex items-center gap-2 cursor-pointer z-30 group"
+            >
+              <span className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center">
+                <Code2 size={12} strokeWidth={2.5} />
+              </span>
+              <span className="text-xs font-bold text-slate-800 group-hover:text-indigo-700 transition-colors">
+                Coding
+              </span>
+            </div>
+
+            {/* 4. AI Pill (Center Right) */}
+            <div
+              onClick={() => handleTopicClick('AI & Adaptive Socratic Coaching')}
+              className="absolute top-[48%] -right-2 -translate-y-1/2 bg-white/95 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-slate-200/90 shadow-[0_4px_14px_rgba(0,0,0,0.06)] hover:shadow-lg hover:border-cyan-400 hover:scale-105 transition-all flex items-center gap-2 cursor-pointer z-30 group"
+            >
+              <span className="w-5 h-5 rounded-full bg-cyan-100 text-cyan-700 flex items-center justify-center">
+                <Cpu size={12} strokeWidth={2.5} />
+              </span>
+              <span className="text-xs font-bold text-slate-800 group-hover:text-cyan-700 transition-colors">
+                AI
+              </span>
+            </div>
+
+            {/* 5. English Pill (Bottom Left) */}
+            <div
+              onClick={() => handleTopicClick('English & Literature')}
+              className="absolute bottom-6 left-8 bg-white/95 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-slate-200/90 shadow-[0_4px_14px_rgba(0,0,0,0.06)] hover:shadow-lg hover:border-amber-400 hover:scale-105 transition-all flex items-center gap-2 cursor-pointer z-30 group"
+            >
+              <span className="w-5 h-5 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center">
+                <BookOpen size={12} strokeWidth={2.5} />
+              </span>
+              <span className="text-xs font-bold text-slate-800 group-hover:text-amber-700 transition-colors">
+                English
+              </span>
+            </div>
+
+            {/* 6. Social Science Pill (Bottom Right) */}
+            <div
+              onClick={() => handleTopicClick('Social Science & History')}
+              className="absolute bottom-5 right-10 bg-white/95 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-slate-200/90 shadow-[0_4px_14px_rgba(0,0,0,0.06)] hover:shadow-lg hover:border-lime-400 hover:scale-105 transition-all flex items-center gap-2 cursor-pointer z-30 group"
+            >
+              <span className="w-5 h-5 rounded-full bg-lime-100 text-lime-700 flex items-center justify-center">
+                <Share2 size={12} strokeWidth={2.5} />
+              </span>
+              <span className="text-xs font-bold text-slate-800 group-hover:text-lime-700 transition-colors">
+                Social Science
+              </span>
+            </div>
+
+          </div>
+        </div>
+
+        {/* ------------------------------------------------------------ */}
+        {/* LAYER 5: THE BOY ON THE ROCK (CUTOUT ON RIGHT)               */}
+        {/* Crisp transparent PNG looking across the mountain vista     */}
+        {/* ------------------------------------------------------------ */}
+        <div className="hidden md:flex absolute right-0 bottom-0 w-[42%] max-w-[560px] h-[82%] lg:h-[88%] pointer-events-none select-none z-25 overflow-hidden items-end justify-end">
+          <img
+            src="/images/boy-cutout.png"
+            alt="Student with ShikshaAI backpack on mountain"
+            className="w-full h-full object-contain object-right-bottom drop-shadow-[0_15px_30px_rgba(0,0,0,0.3)]"
+          />
+        </div>
+
+        {/* ------------------------------------------------------------ */}
+        {/* LAYER 6: TOP RIGHT SCRIPT LABEL                              */}
+        {/* ------------------------------------------------------------ */}
+        <div className="hidden sm:block absolute top-6 right-8 lg:right-12 z-30 font-editorial italic text-sm lg:text-base text-slate-700 -rotate-3 select-none pointer-events-none drop-shadow-2xs">
+          Adaptive Learning for a Brighter Tomorrow
+        </div>
+
+        {/* ------------------------------------------------------------ */}
+        {/* LAYER 7: LEFT EDITORIAL HEADLINE & REAL ACTION BUTTONS       */}
+        {/* Crisp HTML text and real interactive buttons                 */}
+        {/* ------------------------------------------------------------ */}
+        <div className="relative z-30 max-w-[1280px] w-full mx-auto px-6 sm:px-8 py-10 sm:py-14">
+          <div className="max-w-lg space-y-5 text-left">
+            
+            {/* Top Micro-Tag */}
+            <div className="flex items-center gap-3 text-[10px] sm:text-xs font-mono tracking-[0.25em] text-slate-500 font-bold uppercase">
+              <span>INDIA'S ADAPTIVE LEARNING PLATFORM</span>
+              <span className="w-12 h-[2px] bg-[#a3e635] inline-block rounded-full" />
+            </div>
+
+            {/* Headline */}
+            <h2 className="text-4xl sm:text-5xl lg:text-[56px] font-bold text-slate-900 leading-[1.05] tracking-tight font-editorial">
+              Learning <br />
+              for <span className="text-[#84cc16] italic font-editorial drop-shadow-2xs">what's next.</span>
+            </h2>
+
+            {/* Subtitle */}
+            <p className="text-slate-600 text-sm sm:text-base leading-relaxed max-w-sm sm:max-w-md font-medium">
+              NCERT-aligned learning, interactive 3D labs and personalized guidance for Classes 9–10.
+            </p>
+
+            {/* Real Interactive Action Buttons */}
+            <div className="flex flex-wrap items-center gap-4 pt-2">
+              
+              {/* Lime Green Explore Button */}
+              <button
+                onClick={() => {
+                  sounds.playClick();
+                  const el = document.getElementById('portals');
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  else onOpenLogin('student');
+                }}
+                className="bg-[#ccff00] hover:bg-[#bbf000] text-black px-6 sm:px-7 py-3 rounded-full text-xs sm:text-sm font-extrabold flex items-center gap-2 shadow-[0_6px_18px_rgba(204,255,0,0.35)] hover:shadow-[0_10px_25px_rgba(204,255,0,0.5)] transition-all active:scale-95 group cursor-pointer"
+              >
+                <span>Explore Platform</span>
+                <ArrowRight size={15} className="group-hover:translate-x-1 transition-transform" />
+              </button>
+
+              {/* White Translucent Watch Overview Button */}
+              <button
+                onClick={() => {
+                  sounds.playClick();
+                  setShowOverviewModal(true);
+                }}
+                className="bg-white/90 hover:bg-white text-slate-800 border border-slate-200/90 px-5 sm:px-6 py-3 rounded-full text-xs sm:text-sm font-bold flex items-center gap-2.5 shadow-2xs hover:shadow-md transition-all active:scale-95 backdrop-blur-md cursor-pointer"
+              >
+                <div className="w-4 h-4 rounded-full bg-slate-900 text-white flex items-center justify-center">
+                  <Play size={8} fill="currentColor" className="ml-0.5" />
+                </div>
+                <span>Watch Overview</span>
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+        {/* Active Topic Banner */}
+        {activeTopic && (
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-slate-900/95 text-white px-4 py-1.5 rounded-full text-xs font-bold shadow-xl border border-emerald-400/80 animate-bounce z-50 flex items-center gap-2">
+            <Sparkles size={14} className="text-[#ccff00]" />
+            <span>Opening {activeTopic} Modules...</span>
+          </div>
+        )}
+
       </section>
 
       {/* ============================================================== */}
       {/* 3. FEATURE RIBBON / TRUST BAR (EXACT FLOATING WHITE PILL)      */}
       {/* ============================================================== */}
-      <div id="features" className="max-w-[1140px] mx-auto px-4 -mt-5 sm:-mt-7 lg:-mt-8 relative z-30">
-        <div className="bg-white rounded-full shadow-[0_4px_25px_rgba(0,0,0,0.06)] border border-slate-200/90 py-3 sm:py-3.5 px-6 sm:px-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 divide-y lg:divide-y-0 lg:divide-x divide-slate-200/80 gap-y-3 lg:gap-y-0 items-center">
+      <div id="features" className="max-w-[1180px] mx-auto px-4 -mt-6 sm:-mt-7 relative z-35">
+        <div className="bg-white rounded-full shadow-[0_6px_25px_rgba(0,0,0,0.06)] border border-slate-200/90 py-3.5 px-6 sm:px-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 divide-y lg:divide-y-0 lg:divide-x divide-slate-200/80 gap-y-3 lg:gap-y-0 items-center">
           
           {/* 1. NCERT Aligned */}
           <div className="flex items-center gap-3 px-3 py-1">
@@ -328,9 +464,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
       </div>
 
       {/* ============================================================== */}
-      {/* 4. CHOOSE YOUR PORTAL SECTION (SECTION 03)                     */}
+      {/* 4. CHOOSE YOUR PORTAL SECTION (MATCHING REFERENCE IMAGE 3)     */}
       {/* ============================================================== */}
-      <section id="portals" className="w-full max-w-[1140px] mx-auto px-4 sm:px-6 pt-10 sm:pt-12 pb-10">
+      <section id="portals" className="w-full max-w-[1180px] mx-auto px-4 sm:px-6 pt-12 sm:pt-14 pb-12">
         
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
@@ -386,13 +522,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onOpenLogin }
                   sounds.playClick();
                   onOpenLogin(portal.id);
                 }}
-                className={`rounded-3xl p-6 sm:p-7 border ${portal.cardBorder} ${portal.cardBg} shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-xl transition-all duration-300 cursor-pointer group flex flex-col justify-between`}
+                className={`rounded-[28px] p-6 sm:p-7 border ${portal.cardBorder} ${portal.cardBg} shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-xl transition-all duration-300 cursor-pointer group flex flex-col justify-between`}
               >
                 <div>
                   {/* Top Row: Icon Container and Action Arrow Button */}
                   <div className="flex items-center justify-between mb-4">
-                    <div className={`w-10 h-10 rounded-2xl ${portal.accentBg} ${portal.accentBorder} border flex items-center justify-center ${portal.iconColor} shadow-xs group-hover:scale-105 transition-transform`}>
-                      <Icon size={20} />
+                    <div className={`w-11 h-11 rounded-2xl ${portal.accentBg} flex items-center justify-center ${portal.iconColor} shadow-xs group-hover:scale-105 transition-transform`}>
+                      <Icon size={22} />
                     </div>
 
                     <div className={`w-8 h-8 rounded-full ${portal.buttonBg} flex items-center justify-center shadow-xs group-hover:scale-110 transition-all`}>
